@@ -43,7 +43,12 @@ Then create a new (private, if you like) repo on GitHub and push this folder to 
    - `TELEGRAM_CHAT_ID` — your chat ID from step 1
    - `CRON_SECRET` — any random string you make up (e.g. mash your keyboard). Vercel
      will automatically send this as a bearer token when it triggers the daily cron,
-     which stops randoms on the internet from triggering your reminders.
+     which stops randoms on the internet from triggering your reminders. **Required** —
+     if unset, the cron endpoint refuses all requests rather than allowing anyone to
+     trigger it.
+   - `SITE_PASSWORD` — any password you choose. The whole app is gated behind a
+     `/login` page that checks this password; you'll log in once and stay signed
+     in for 30 days. **Required** — without it, `/login` can't succeed.
 5. Redeploy.
 
 Your site will be live at `https://<your-project>.vercel.app`.
@@ -77,6 +82,12 @@ vercel env pull .env.local   # after linking the project with `vercel link`
 npm run dev
 ```
 
+`SITE_PASSWORD` and `CRON_SECRET` must be set in `.env.local` too (the app is
+gated by design — if either is missing, you won't be able to log in or run
+the cron check locally). The only paths that don't require being logged in
+are `/login`, `/api/login`, `/api/logout`, and `/api/cron/check-birthdays`
+(which has its own bearer-token check instead).
+
 You can manually trigger the birthday check locally or in prod by visiting
-`/api/cron/check-birthdays` (add the `Authorization: Bearer <CRON_SECRET>`
-header if `CRON_SECRET` is set).
+`/api/cron/check-birthdays` with an `Authorization: Bearer <CRON_SECRET>`
+header.

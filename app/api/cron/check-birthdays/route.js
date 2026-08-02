@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 function isAuthorized(request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true; // no secret configured, allow (local/dev use)
+  if (!secret) return false; // fail closed: an unset secret must never mean "anyone may trigger this"
   return request.headers.get("authorization") === `Bearer ${secret}`;
 }
 

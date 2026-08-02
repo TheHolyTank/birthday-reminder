@@ -50,6 +50,15 @@ function initials(name) {
     .join("");
 }
 
+async function apiFetch(url, options) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+    throw new Error("Session expired");
+  }
+  return res;
+}
+
 function resizeImageToDataUrl(file, maxDim = 256, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -234,6 +243,14 @@ export default function Home() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  async function handleLogout() {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
+  }
+
   function toggleTheme() {
     const next = !dark;
     setDark(next);
@@ -247,8 +264,8 @@ export default function Home() {
     setLoading(true);
     try {
       const [friendsRes, groupsRes] = await Promise.all([
-        fetch("/api/friends"),
-        fetch("/api/groups"),
+        apiFetch("/api/friends"),
+        apiFetch("/api/groups"),
       ]);
       if (!friendsRes.ok || !groupsRes.ok) throw new Error("Failed to load data");
       setFriends(await friendsRes.json());
@@ -390,7 +407,7 @@ export default function Home() {
     try {
       const url = editingFriendId ? `/api/friends/${editingFriendId}` : "/api/friends";
       const method = editingFriendId ? "PUT" : "POST";
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -417,7 +434,7 @@ export default function Home() {
   async function performDeleteFriend(id) {
     setError("");
     try {
-      const res = await fetch(`/api/friends/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/friends/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete friend");
       if (editingFriendId === id) cancelEditFriend();
       await loadAll();
@@ -433,7 +450,7 @@ export default function Home() {
     setError("");
     setSavingGroup(true);
     try {
-      const res = await fetch("/api/groups", {
+      const res = await apiFetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(groupForm),
@@ -466,7 +483,7 @@ export default function Home() {
     setError("");
     setSavingGroup(true);
     try {
-      const res = await fetch(`/api/groups/${id}`, {
+      const res = await apiFetch(`/api/groups/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editGroupForm),
@@ -487,7 +504,7 @@ export default function Home() {
   async function performDeleteGroup(id) {
     setError("");
     try {
-      const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/groups/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete group");
       if (activeGroup === String(id)) setActiveGroup("all");
       if (editingGroupId === id) cancelEditGroup();
@@ -512,6 +529,12 @@ export default function Home() {
 
   return (
     <main className="relative mx-auto max-w-3xl px-4 py-10 sm:py-16">
+      <button
+        onClick={handleLogout}
+        className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 shadow-softer ring-1 ring-neutral-200 transition hover:text-neutral-700 hover:ring-neutral-300 sm:left-6 sm:top-6 dark:bg-neutral-900 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:text-neutral-200 dark:hover:ring-neutral-600"
+      >
+        Log out
+      </button>
       <button
         onClick={toggleTheme}
         aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
