@@ -226,6 +226,11 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [me, setMe] = useState({ email: "", telegram_chat_id: null });
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [telegramChatIdInput, setTelegramChatIdInput] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     function onChange(e) {
@@ -263,13 +268,17 @@ export default function Home() {
   async function loadAll() {
     setLoading(true);
     try {
-      const [friendsRes, groupsRes] = await Promise.all([
+      const [friendsRes, groupsRes, meRes] = await Promise.all([
         apiFetch("/api/friends"),
         apiFetch("/api/groups"),
+        apiFetch("/api/me"),
       ]);
-      if (!friendsRes.ok || !groupsRes.ok) throw new Error("Failed to load data");
+      if (!friendsRes.ok || !groupsRes.ok || !meRes.ok) throw new Error("Failed to load data");
       setFriends(await friendsRes.json());
       setGroups(await groupsRes.json());
+      const meData = await meRes.json();
+      setMe(meData);
+      setTelegramChatIdInput(meData.telegram_chat_id || "");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -519,6 +528,30 @@ export default function Home() {
     }
   }
 
+  async function handleSettingsSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setSavingSettings(true);
+    try {
+      const res = await apiFetch("/api/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramChatId: telegramChatIdInput }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to save settings");
+      }
+      const updated = await res.json();
+      setMe(updated);
+      setTelegramChatIdInput(updated.telegram_chat_id || "");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
   const inputClass =
     "w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/20";
 
@@ -614,11 +647,58 @@ export default function Home() {
         </button>
         <button
           onClick={() => setShowGroupPanel((v) => !v)}
-          className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
         >
           {showGroupPanel ? "Close groups" : "＋ Manage groups"}
         </button>
+        <button
+          onClick={() => setShowSettingsPanel((v) => !v)}
+          className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+        >
+          {showSettingsPanel ? "Close settings" : "⚙ Telegram settings"}
+        </button>
       </div>
+
+      {/* Telegram settings panel */}
+      {showSettingsPanel && (
+        <div className="mb-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="mb-3 font-display text-base font-semibold">Telegram settings</h2>
+          <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+            Signed in as <span className="font-medium">{me.email}</span>. Message{" "}
+            <a
+              href="https://t.me/userinfobot"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              @userinfobot
+            </a>{" "}
+            on Telegram to get your numeric chat id, then paste it below to receive reminders.
+          </p>
+          <form onSubmit={handleSettingsSubmit} className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[10rem] flex-1">
+              <label htmlFor="telegram-chat-id" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                Telegram chat id
+              </label>
+              <input
+                id="telegram-chat-id"
+                type="text"
+                value={telegramChatIdInput}
+                onChange={(e) => setTelegramChatIdInput(e.target.value)}
+                className={inputClass}
+                placeholder="e.g. 987654321"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              Save
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Manage groups panel */}
       {showGroupPanel && (

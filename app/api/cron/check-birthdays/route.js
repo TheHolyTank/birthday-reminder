@@ -25,11 +25,13 @@ export async function GET(request) {
   const year = tomorrow.getUTCFullYear();
 
   const { rows } = await sql`
-    SELECT id, name, birthday, note
-    FROM friends
-    WHERE EXTRACT(MONTH FROM birthday) = ${month}
-      AND EXTRACT(DAY FROM birthday) = ${day}
-      AND (last_reminded_year IS NULL OR last_reminded_year <> ${year});
+    SELECT f.id, f.name, f.birthday, f.note, u.telegram_chat_id
+    FROM friends f
+    JOIN users u ON u.id = f.user_id
+    WHERE EXTRACT(MONTH FROM f.birthday) = ${month}
+      AND EXTRACT(DAY FROM f.birthday) = ${day}
+      AND (f.last_reminded_year IS NULL OR f.last_reminded_year <> ${year})
+      AND u.telegram_chat_id IS NOT NULL;
   `;
 
   const results = [];
@@ -45,7 +47,7 @@ export async function GET(request) {
       `${dateLabel}! Don't forget to send your regards.`;
 
     try {
-      await sendTelegramReminder(message);
+      await sendTelegramReminder(friend.telegram_chat_id, message);
       await sql`
         UPDATE friends SET last_reminded_year = ${year} WHERE id = ${friend.id};
       `;
