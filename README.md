@@ -33,9 +33,11 @@ Then create a new (private, if you like) repo on GitHub and push this folder to 
 
 1. Go to [vercel.com](https://vercel.com), sign up/log in, and click **Add New → Project**.
 2. Import the GitHub repo you just pushed.
-3. Go to the project's **Storage** tab and create a new **Postgres** database
-   (Neon, free tier), then connect it to this project. Vercel will
-   automatically add the `POSTGRES_URL` env var for you.
+3. Go to the project's **Storage** tab → **Create Database** → **Marketplace
+   Database Providers** → **Neon** (free tier), and connect it to this
+   project. The integration automatically adds the `POSTGRES_URL` env var
+   this app reads (Vercel's older native "Postgres" product has been retired
+   in favor of this Neon-backed integration, but no code changes were needed).
 4. Go to **Environment Variables** and add:
    - `TELEGRAM_BOT_TOKEN` — the token from step 1
    - `TELEGRAM_CHAT_ID` — your chat ID from step 1

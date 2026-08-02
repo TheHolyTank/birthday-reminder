@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(winget list --id OpenJS.NodeJS 2>$null)",
-      "PowerShell(Get-Command git -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)"
-    ]
-  }
-}
