@@ -212,6 +212,9 @@ export default function Home() {
 
   const [birthdayMode, setBirthdayMode] = useState("type");
   const [typedBirthday, setTypedBirthday] = useState("");
+  const [calendarDay, setCalendarDay] = useState("");
+  const [calendarMonth, setCalendarMonth] = useState("");
+  const [calendarYear, setCalendarYear] = useState("");
 
   const [activeGroup, setActiveGroup] = useState("all");
   const [showGroupPanel, setShowGroupPanel] = useState(false);
@@ -338,14 +341,29 @@ export default function Home() {
     [friends]
   );
 
+  function syncCalendarPartsFromBirthday(birthday) {
+    if (birthday) {
+      const [y, m, d] = birthday.split("-").map(Number);
+      setCalendarYear(String(y));
+      setCalendarMonth(String(m));
+      setCalendarDay(String(d));
+    } else {
+      setCalendarYear("");
+      setCalendarMonth("");
+      setCalendarDay("");
+    }
+  }
+
   function startEditFriend(friend) {
     setEditingFriendId(friend.id);
     setPhotoError("");
     setBirthdayMode("calendar");
     setTypedBirthday("");
+    const birthday = friend.birthday.slice(0, 10);
+    syncCalendarPartsFromBirthday(birthday);
     setFriendForm({
       name: friend.name,
-      birthday: friend.birthday.slice(0, 10),
+      birthday,
       note: friend.note || "",
       groupId: friend.group_id ? String(friend.group_id) : "",
       photoUrl: friend.photo_url || "",
@@ -357,6 +375,7 @@ export default function Home() {
     setPhotoError("");
     setBirthdayMode("type");
     setTypedBirthday("");
+    syncCalendarPartsFromBirthday("");
     setFriendForm(emptyFriendForm);
   }
 
@@ -366,23 +385,24 @@ export default function Home() {
     setFriendForm((f) => ({ ...f, birthday: parsed || "" }));
   }
 
-  const [birthdayYear, birthdayMonth, birthdayDay] = friendForm.birthday
-    ? friendForm.birthday.split("-").map(Number)
-    : [undefined, undefined, undefined];
-
   const daysInSelectedMonth =
-    birthdayYear && birthdayMonth ? new Date(birthdayYear, birthdayMonth, 0).getDate() : 31;
+    calendarYear && calendarMonth ? new Date(Number(calendarYear), Number(calendarMonth), 0).getDate() : 31;
 
   function handleCalendarPartChange(part, value) {
     const next = {
-      year: birthdayYear,
-      month: birthdayMonth,
-      day: birthdayDay,
-      [part]: value ? Number(value) : undefined,
+      year: part === "year" ? value : calendarYear,
+      month: part === "month" ? value : calendarMonth,
+      day: part === "day" ? value : calendarDay,
     };
-    const complete =
-      next.year && next.month && next.day && isValidDate(next.year, next.month, next.day);
-    setFriendForm((f) => ({ ...f, birthday: complete ? toISODate(next.year, next.month, next.day) : "" }));
+    if (part === "year") setCalendarYear(value);
+    if (part === "month") setCalendarMonth(value);
+    if (part === "day") setCalendarDay(value);
+
+    const year = Number(next.year);
+    const month = Number(next.month);
+    const day = Number(next.day);
+    const complete = next.year && next.month && next.day && isValidDate(year, month, day);
+    setFriendForm((f) => ({ ...f, birthday: complete ? toISODate(year, month, day) : "" }));
   }
 
   async function handlePhotoFile(file) {
@@ -453,6 +473,7 @@ export default function Home() {
       setEditingFriendId(null);
       setBirthdayMode("type");
       setTypedBirthday("");
+      syncCalendarPartsFromBirthday("");
       await loadAll();
     } catch (err) {
       setError(err.message);
@@ -1304,7 +1325,10 @@ export default function Home() {
               <div className="flex rounded-lg bg-neutral-100 p-0.5 text-xs font-medium dark:bg-neutral-800">
                 <button
                   type="button"
-                  onClick={() => setBirthdayMode("calendar")}
+                  onClick={() => {
+                    setBirthdayMode("calendar");
+                    syncCalendarPartsFromBirthday(friendForm.birthday);
+                  }}
                   aria-pressed={birthdayMode === "calendar"}
                   className={`rounded-md px-2.5 py-1 transition ${
                     birthdayMode === "calendar"
@@ -1333,7 +1357,7 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-2">
                 <select
                   required
-                  value={birthdayDay ?? ""}
+                  value={calendarDay}
                   onChange={(e) => handleCalendarPartChange("day", e.target.value)}
                   className={inputClass}
                   aria-label="Day"
@@ -1347,7 +1371,7 @@ export default function Home() {
                 </select>
                 <select
                   required
-                  value={birthdayMonth ?? ""}
+                  value={calendarMonth}
                   onChange={(e) => handleCalendarPartChange("month", e.target.value)}
                   className={inputClass}
                   aria-label="Month"
@@ -1361,7 +1385,7 @@ export default function Home() {
                 </select>
                 <select
                   required
-                  value={birthdayYear ?? ""}
+                  value={calendarYear}
                   onChange={(e) => handleCalendarPartChange("year", e.target.value)}
                   className={inputClass}
                   aria-label="Year"
