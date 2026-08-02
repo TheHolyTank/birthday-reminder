@@ -35,9 +35,9 @@ export async function GET(request) {
   const reminded = [];
 
   for (const friend of rows) {
-    const dateLabel = tomorrow.toLocaleDateString("en-US", {
-      month: "long",
+    const dateLabel = tomorrow.toLocaleDateString("en-GB", {
       day: "numeric",
+      month: "long",
     });
     const noteSuffix = friend.note ? ` (${friend.note})` : "";
     const message =

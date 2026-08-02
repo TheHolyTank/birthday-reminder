@@ -21,7 +21,7 @@ function daysUntilNextBirthday(birthday) {
 
 function formatBirthday(birthday) {
   const bday = new Date(birthday);
-  return bday.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  return bday.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
 }
 
 function initials(name) {
