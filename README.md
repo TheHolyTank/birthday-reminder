@@ -1,15 +1,16 @@
 # Birthday Reminder
 
 A small multi-user Next.js app: each account tracks their own friends'
-birthdays, and every day it checks whose birthday is tomorrow and sends
-**them** a Telegram message reminding them to send their regards.
+birthdays, and sends **them** a Telegram message reminding them to send
+their regards — the day before or the day of, at whatever hour they choose.
 
 - Frontend + API: Next.js (App Router), deployed on Vercel
 - Database: Vercel Postgres (Neon-backed, free tier)
-- Daily check: Vercel Cron, once a day
+- Reminder check: Vercel Cron + a free external hourly pinger (see step 4)
 - Message send: Telegram Bot API (free, official, reliable) — one shared bot,
   each account supplies its own chat id
-- Accounts: username + password, sign-up gated by a shared invite code
+- Accounts: username (Hebrew or Latin letters) + password, sign-up gated by
+  a shared invite code
 
 ## 1. Create a Telegram bot
 
@@ -51,21 +52,37 @@ Then create a new (private, if you like) repo on GitHub and push this folder to 
 
 Your site will be live at `https://<your-project>.vercel.app`.
 
-## 4. Set the reminder time
+## 4. Reminder timing
 
-By default, [vercel.json](vercel.json) runs the check daily at **17:30 UTC**
-(20:30 Israel Daylight Time). Vercel's free (Hobby) plan only supports fixed
-UTC cron schedules with no daylight-saving awareness, so this drifts to
-19:30 local during Israel Standard Time (roughly late October–late March) —
-shift it by one hour for that half of the year if you want to keep it exact:
+Each account chooses its own reminder timing in **⚙ Settings**: whether to
+be notified the **day before** or the **day of** each friend's birthday, and
+at what hour — shown and picked in *your own local time*, stored internally
+as a UTC hour. This is per-account, not a single global setting.
 
-```json
-"schedule": "30 17 * * *"
-```
+**Important — this needs one extra piece to actually be accurate.** Vercel's
+free (Hobby) plan only triggers its own built-in cron (`vercel.json`) **once
+a day**, and even then within a roughly ±1 hour window, not the exact minute.
+So the endpoint needs to be checked more often than that for everyone's
+individual hour choice to actually fire on time. The fix is free and takes
+about 5 minutes:
 
-(minute hour * * *). Redeploy after changing it. Since accounts can be in
-different timezones, this one schedule is shared by everyone — there's no
-per-user reminder time (yet).
+1. Sign up free at [cron-job.org](https://cron-job.org) (or any similar free
+   cron-ping service).
+2. Create a new cron job:
+   - **URL**: `https://<your-project>.vercel.app/api/cron/check-birthdays`
+   - **Schedule**: every hour, on the hour.
+   - **Method**: GET
+   - **Header**: `Authorization: Bearer <your CRON_SECRET value>`
+3. Save and enable it.
+
+With that running hourly, the endpoint is checked every hour and only
+actually sends to accounts whose chosen day+hour matches *that* hour — so
+each person's own setting is honored precisely, no matter what they picked.
+`vercel.json`'s own daily trigger still runs too, as a redundant fallback in
+case the external pinger ever goes down (it defaults to 17:30 UTC —
+change the `schedule` field there if you want the fallback to land near a
+particular time, though with the hourly pinger in place this fallback rarely
+matters).
 
 ## 5. Use it
 
@@ -90,12 +107,15 @@ per-user reminder time (yet).
      created and logged in isn't re-blocked from the app if Telegram is ever
      disconnected later.
 2. Open **⚙ Settings** (next to "Log out") any time afterward to upload a
-   profile photo, change your username, change your password, or
-   reconnect/change your Telegram chat id.
-3. Add friends with their name, birthday, and an optional note. The night
-   before each birthday, you'll get a Telegram message like:
+   profile photo, change your username, change your password,
+   reconnect/change your Telegram chat id, or set your **reminder timing**
+   (day before/day of, and what hour in your own local time).
+3. Add friends with their name, birthday, and an optional note. At your
+   chosen time, you'll get a Telegram message like:
 
    > 🎂 Reminder: it's Jane's (college roommate) birthday tomorrow, August 3! Don't forget to send your regards.
+
+   (or "...birthday today, August 3!" if you chose day-of instead of day-before)
 
 Anyone else you share the invite code with can sign up for their own account,
 with their own friends, groups, and Telegram chat id — completely separate
