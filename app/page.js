@@ -19,9 +19,19 @@ function daysUntilNextBirthday(birthday) {
   today.setHours(0, 0, 0, 0);
 
   const bday = new Date(birthday);
-  let next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+  const month = bday.getMonth() + 1;
+  const day = bday.getDate();
+
+  // Feb 29 birthdays are observed on Feb 28 in non-leap years, rather than
+  // letting `new Date(year, 1, 29)` silently roll over to March 1.
+  function occurrence(year) {
+    const observedDay = isValidDate(year, month, day) ? day : month === 2 && day === 29 ? 28 : day;
+    return new Date(year, month - 1, observedDay);
+  }
+
+  let next = occurrence(today.getFullYear());
   if (next < today) {
-    next = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
+    next = occurrence(today.getFullYear() + 1);
   }
   return Math.round((next - today) / (1000 * 60 * 60 * 24));
 }
@@ -200,6 +210,10 @@ export default function Home() {
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [editGroupForm, setEditGroupForm] = useState(emptyGroupForm);
 
+  const [confirmDeleteFriendId, setConfirmDeleteFriendId] = useState(null);
+  const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
@@ -375,8 +389,7 @@ export default function Home() {
     }
   }
 
-  async function handleDeleteFriend(id) {
-    if (!confirm("Remove this friend?")) return;
+  async function performDeleteFriend(id) {
     setError("");
     try {
       const res = await fetch(`/api/friends/${id}`, { method: "DELETE" });
@@ -385,6 +398,8 @@ export default function Home() {
       await loadAll();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setConfirmDeleteFriendId(null);
     }
   }
 
@@ -444,17 +459,21 @@ export default function Home() {
     }
   }
 
-  async function handleDeleteGroup(id) {
-    if (!confirm("Delete this group? Members will become ungrouped.")) return;
+  async function performDeleteGroup(id) {
     setError("");
     try {
       const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete group");
       if (activeGroup === String(id)) setActiveGroup("all");
       if (editingGroupId === id) cancelEditGroup();
+      if (friendForm.groupId === String(id)) {
+        setFriendForm((f) => ({ ...f, groupId: "" }));
+      }
       await loadAll();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setConfirmDeleteGroupId(null);
     }
   }
 
@@ -464,6 +483,7 @@ export default function Home() {
   const neutralPillClass =
     "bg-white text-neutral-600 ring-1 ring-neutral-200 hover:ring-neutral-300 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-neutral-700 dark:hover:ring-neutral-600";
   const activePillClass = "bg-neutral-900 text-white shadow-soft dark:bg-white dark:text-neutral-900";
+  const dangerPillClass = "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
 
   return (
     <main className="relative mx-auto max-w-3xl px-4 py-10 sm:py-16">
@@ -604,22 +624,40 @@ export default function Home() {
                           <GroupDot color={g.color} />
                           {g.name}
                         </span>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => startEditGroup(g)}
-                            className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
-                            aria-label={`Edit ${g.name}`}
-                          >
-                            <IconPencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteGroup(g.id)}
-                            className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
-                            aria-label={`Delete ${g.name}`}
-                          >
-                            <IconTrash className="h-4 w-4" />
-                          </button>
-                        </div>
+                        {confirmDeleteGroupId === g.id ? (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-neutral-500 dark:text-neutral-400">Delete?</span>
+                            <button
+                              onClick={() => performDeleteGroup(g.id)}
+                              className={`rounded-full px-2.5 py-1 font-medium transition ${dangerPillClass}`}
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteGroupId(null)}
+                              className={`rounded-full px-2.5 py-1 font-medium transition ${neutralPillClass}`}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => startEditGroup(g)}
+                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
+                              aria-label={`Edit ${g.name}`}
+                            >
+                              <IconPencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteGroupId(g.id)}
+                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
+                              aria-label={`Delete ${g.name}`}
+                            >
+                              <IconTrash className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </li>
@@ -978,22 +1016,40 @@ export default function Home() {
                   {days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `${days}d`}
                 </span>
 
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    onClick={() => startEditFriend(friend)}
-                    className="rounded-lg p-2 text-neutral-400 transition hover:bg-indigo-50 hover:text-indigo-600 dark:text-neutral-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
-                    aria-label={`Edit ${friend.name}`}
-                  >
-                    <IconPencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteFriend(friend.id)}
-                    className="rounded-lg p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-300"
-                    aria-label={`Delete ${friend.name}`}
-                  >
-                    <IconTrash className="h-4 w-4" />
-                  </button>
-                </div>
+                {confirmDeleteFriendId === friend.id ? (
+                  <div className="flex shrink-0 items-center gap-1.5 text-xs">
+                    <span className="text-neutral-500 dark:text-neutral-400">Delete?</span>
+                    <button
+                      onClick={() => performDeleteFriend(friend.id)}
+                      className={`rounded-full px-2.5 py-1 font-medium transition ${dangerPillClass}`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteFriendId(null)}
+                      className={`rounded-full px-2.5 py-1 font-medium transition ${neutralPillClass}`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => startEditFriend(friend)}
+                      className="rounded-lg p-2 text-neutral-400 transition hover:bg-indigo-50 hover:text-indigo-600 dark:text-neutral-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+                      aria-label={`Edit ${friend.name}`}
+                    >
+                      <IconPencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteFriendId(friend.id)}
+                      className="rounded-lg p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:text-neutral-500 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+                      aria-label={`Delete ${friend.name}`}
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </li>
             );
           })}

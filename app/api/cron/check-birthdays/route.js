@@ -22,7 +22,7 @@ export async function GET(request) {
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   const month = tomorrow.getUTCMonth() + 1;
   const day = tomorrow.getUTCDate();
-  const year = now.getUTCFullYear();
+  const year = tomorrow.getUTCFullYear();
 
   const { rows } = await sql`
     SELECT id, name, birthday, note
@@ -32,7 +32,7 @@ export async function GET(request) {
       AND (last_reminded_year IS NULL OR last_reminded_year <> ${year});
   `;
 
-  const reminded = [];
+  const results = [];
 
   for (const friend of rows) {
     const dateLabel = tomorrow.toLocaleDateString("en-GB", {
@@ -44,14 +44,22 @@ export async function GET(request) {
       `🎂 Reminder: it's ${friend.name}'s${noteSuffix} birthday tomorrow, ` +
       `${dateLabel}! Don't forget to send your regards.`;
 
-    await sendTelegramReminder(message);
-
-    await sql`
-      UPDATE friends SET last_reminded_year = ${year} WHERE id = ${friend.id};
-    `;
-
-    reminded.push(friend.name);
+    try {
+      await sendTelegramReminder(message);
+      await sql`
+        UPDATE friends SET last_reminded_year = ${year} WHERE id = ${friend.id};
+      `;
+      results.push({ friendId: friend.id, name: friend.name, status: "sent" });
+    } catch (err) {
+      console.error(`Reminder failed for friend ${friend.id}`, err);
+      results.push({ friendId: friend.id, name: friend.name, status: "failed", error: err.message });
+    }
   }
 
-  return NextResponse.json({ checked: rows.length, reminded });
+  return NextResponse.json({
+    checked: rows.length,
+    sent: results.filter((r) => r.status === "sent").length,
+    failed: results.filter((r) => r.status === "failed").length,
+    results,
+  });
 }
