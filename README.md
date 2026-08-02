@@ -69,21 +69,24 @@ per-user reminder time (yet).
 
 ## 5. Use it
 
-1. Visit your Vercel URL and go to **Sign up**. Create an account with your
-   email, a password, and the `SITE_PASSWORD` invite code from step 3.
-   **If you're upgrading an existing single-user deployment**, the very first
-   account ever created automatically inherits all previously-added
-   friends/groups — nothing is lost, you're just "claiming" it once.
-2. Open **⚙ Settings** (next to "Log out") in the app. Set your display name
-   — it's shown as "Hello, {name}" on the main page. You can also change your
-   password there any time.
-3. In the Telegram section of Settings, message **@userinfobot** on Telegram
-   to get your numeric chat id, enter it, and click **Send verification
-   code**. The bot will message you a 6-digit code — enter it back in the app
-   to confirm. Reminders won't send until this verification step is
-   completed (this proves the chat id actually belongs to you, not just that
-   you typed a number that happened to be someone else's).
-4. Add friends with their name, birthday, and an optional note. The night
+1. Visit your Vercel URL and go to **Sign up**. It's two steps:
+   - **Step 1**: email, password, confirm password, and the `SITE_PASSWORD`
+     invite code from step 3. **If you're upgrading an existing single-user
+     deployment**, the very first account ever created automatically inherits
+     all previously-added friends/groups — nothing is lost, you're just
+     "claiming" it once.
+   - **Step 2 (required)**: message **@userinfobot** on Telegram to get your
+     numeric chat id, enter it, and click **Send verification code**. The bot
+     replies with a 6-digit code — enter it back in the app to confirm. You
+     can't reach the main app until this is verified (it proves the chat id
+     actually belongs to you, not just that you typed a number that happened
+     to be someone else's). Note: this is only enforced during the sign-up
+     flow itself — an account that's already created and logged in isn't
+     re-blocked from the app if Telegram is ever disconnected later.
+2. Open **⚙ Settings** (next to "Log out") any time afterward to change your
+   display name (shown as "Hello, {name}" on the main page), change your
+   password, or reconnect/change your Telegram chat id.
+3. Add friends with their name, birthday, and an optional note. The night
    before each birthday, you'll get a Telegram message like:
 
    > 🎂 Reminder: it's Jane's (college roommate) birthday tomorrow, August 3! Don't forget to send your regards.
