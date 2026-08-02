@@ -74,10 +74,16 @@ per-user reminder time (yet).
    **If you're upgrading an existing single-user deployment**, the very first
    account ever created automatically inherits all previously-added
    friends/groups — nothing is lost, you're just "claiming" it once.
-2. Open **⚙ Telegram settings** in the app, message **@userinfobot** on
-   Telegram to get your numeric chat id, and paste it in. Reminders won't send
-   until this is set.
-3. Add friends with their name, birthday, and an optional note. The night
+2. Open **⚙ Settings** (next to "Log out") in the app. Set your display name
+   — it's shown as "Hello, {name}" on the main page. You can also change your
+   password there any time.
+3. In the Telegram section of Settings, message **@userinfobot** on Telegram
+   to get your numeric chat id, enter it, and click **Send verification
+   code**. The bot will message you a 6-digit code — enter it back in the app
+   to confirm. Reminders won't send until this verification step is
+   completed (this proves the chat id actually belongs to you, not just that
+   you typed a number that happened to be someone else's).
+4. Add friends with their name, birthday, and an optional note. The night
    before each birthday, you'll get a Telegram message like:
 
    > 🎂 Reminder: it's Jane's (college roommate) birthday tomorrow, August 3! Don't forget to send your regards.
