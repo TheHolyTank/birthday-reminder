@@ -15,7 +15,7 @@ export async function GET(request) {
   }
 
   const { rows } = await sql`
-    SELECT id, username, telegram_chat_id, is_admin, created_at
+    SELECT id, username, name, telegram_chat_id, is_admin, created_at
     FROM users
     ORDER BY created_at ASC;
   `;
