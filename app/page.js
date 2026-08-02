@@ -742,8 +742,16 @@ export default function Home() {
           Birthday Reminder
         </h1>
         {me.username && (
-          <p className="mt-2 font-display text-lg font-semibold text-neutral-700 dark:text-neutral-200">
-            Hello, {me.name || me.username} 👋
+          <p className="mt-2 flex items-center justify-center gap-2 font-display text-lg font-semibold text-neutral-700 dark:text-neutral-200">
+            {me.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={me.photo_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-xs font-semibold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                {initials(me.username)}
+              </span>
+            )}
+            Hello, {me.username} 👋
           </p>
         )}
         <p className="mx-auto mt-3 max-w-md text-neutral-500 dark:text-neutral-400">
@@ -818,39 +826,100 @@ export default function Home() {
       {showSettingsPanel && (
         <div className="mb-8 space-y-6 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
           <div>
-            <h2 className="mb-1 font-display text-base font-semibold">Profile</h2>
-            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Signed in as {me.username}</p>
-            <form onSubmit={handleNameSubmit} className="flex flex-wrap items-end gap-3">
+            <h2 className="mb-3 font-display text-base font-semibold">Profile photo</h2>
+            <div className="flex items-center gap-4">
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-sm font-semibold text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
+                {me.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={me.photo_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initials(me.username || "?")
+                )}
+              </div>
+              <div>
+                <input
+                  ref={profilePhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleProfilePhotoFile(e.target.files?.[0])}
+                  className="hidden"
+                  id="profile-photo-input"
+                />
+                <div className="flex gap-2">
+                  <label
+                    htmlFor="profile-photo-input"
+                    className="cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  >
+                    {me.photo_url ? "Change photo" : "Upload photo"}
+                  </label>
+                  {me.photo_url && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveProfilePhoto}
+                      disabled={savingPhoto}
+                      className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {photoResult && (
+                  <p
+                    role="alert"
+                    aria-live="polite"
+                    className={`mt-1.5 text-xs ${
+                      photoResult.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {photoResult.ok ? "✓ " : ""}
+                    {photoResult.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+            <h2 className="mb-3 font-display text-base font-semibold">Username</h2>
+            <form onSubmit={handleUsernameSubmit} className="flex flex-wrap items-end gap-3">
               <div className="min-w-[10rem] flex-1">
-                <label htmlFor="profile-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                  Name
+                <label htmlFor="profile-username" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Username
                 </label>
                 <input
-                  id="profile-name"
+                  required
+                  id="profile-username"
                   type="text"
-                  value={nameInput}
+                  minLength={3}
+                  maxLength={32}
+                  value={usernameInput}
                   onChange={(e) => {
-                    setNameInput(e.target.value);
-                    setNameSaved(false);
+                    setUsernameInput(e.target.value);
+                    setUsernameResult(null);
                   }}
                   className={inputClass}
-                  placeholder="e.g. Asaf"
                 />
               </div>
               <button
                 type="submit"
-                disabled={savingName}
+                disabled={savingUsername}
                 className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
               >
-                {savingName ? "Saving…" : "Save"}
+                {savingUsername ? "Saving…" : "Save"}
               </button>
-              {nameSaved && (
-                <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                  <IconCheck className="h-4 w-4" />
-                  Saved
-                </span>
-              )}
             </form>
+            {usernameResult && (
+              <p
+                role="alert"
+                aria-live="polite"
+                className={`mt-3 text-sm ${
+                  usernameResult.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {usernameResult.ok ? "✓ " : ""}
+                {usernameResult.message}
+              </p>
+            )}
           </div>
 
           <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">

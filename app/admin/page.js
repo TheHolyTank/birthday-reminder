@@ -125,7 +125,7 @@ export default function AdminPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">
-                      {u.name || u.username}
+                      {u.username}
                       {isMe && <span className="ml-2 text-xs text-neutral-400 dark:text-neutral-500">(you)</span>}
                       {u.is_admin && (
                         <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
@@ -134,7 +134,6 @@ export default function AdminPage() {
                       )}
                     </p>
                     <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-                      {u.name && <>@{u.username} · </>}
                       Joined {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} ·{" "}
                       {u.telegram_chat_id ? (
                         <span className="text-emerald-600 dark:text-emerald-400">Telegram connected</span>

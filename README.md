@@ -75,18 +75,18 @@ per-user reminder time (yet).
      deployment**, the very first account ever created automatically inherits
      all previously-added friends/groups — nothing is lost, you're just
      "claiming" it once.
-   - **Step 2 (required)**: message **@userinfobot** on Telegram to get your
-     numeric chat id, enter it, and click **Send verification code**. The bot
-     replies with a 6-digit code — enter it back in the app to confirm. You
-     can't reach the main app until this is verified (it proves the chat id
-     actually belongs to you, not just that you typed a number that happened
-     to be someone else's). Note: this is only enforced during the sign-up
-     flow itself — an account that's already created and logged in isn't
-     re-blocked from the app if Telegram is ever disconnected later.
-2. Open **⚙ Settings** (next to "Log out") any time afterward to set a
-   display name (shown as "Hello, {name}" on the main page instead of your
-   username, once set), change your password, or reconnect/change your
-   Telegram chat id.
+   - **Step 2 (required)**: the page walks through finding your numeric
+     Telegram chat id (message **@userinfobot**, it replies with your info).
+     Enter it and click **Send verification code**. The bot replies with a
+     6-digit code — enter it back in the app to confirm. You can't reach the
+     main app until this is verified (it proves the chat id actually belongs
+     to you, not just that you typed a number that happened to be someone
+     else's). Note: this is only enforced during the sign-up flow itself — an
+     account that's already created and logged in isn't re-blocked from the
+     app if Telegram is ever disconnected later.
+2. Open **⚙ Settings** (next to "Log out") any time afterward to upload a
+   profile photo, change your username, change your password, or
+   reconnect/change your Telegram chat id.
 3. Add friends with their name, birthday, and an optional note. The night
    before each birthday, you'll get a Telegram message like:
 
@@ -98,7 +98,7 @@ from yours.
 
 **Admin:** the very first account ever created (yours, if you're the
 deployer) is automatically the admin. A **🛡 Admin** link appears next to
-"Log out" for that account only, showing every signed-up user (name/username,
+"Log out" for that account only, showing every signed-up user (username,
 Telegram-connected status, join date) with the ability to reset anyone's
 password or delete their account entirely (including all their friends and
 groups). There's currently no way to promote a second account to admin.

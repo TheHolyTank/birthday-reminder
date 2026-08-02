@@ -176,18 +176,31 @@ function TelegramStep() {
   return (
     <>
       <h1 className="mb-1 font-display text-xl font-semibold">Connect Telegram</h1>
-      <p className="mb-5 text-sm text-neutral-500 dark:text-neutral-400">
-        Step 2 of 2 — required before you can use the app. Message{" "}
-        <a
-          href="https://t.me/userinfobot"
-          target="_blank"
-          rel="noreferrer"
-          className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-        >
-          @userinfobot
-        </a>{" "}
-        on Telegram to get your numeric chat id.
+      <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+        Step 2 of 2 — required before you can use the app.
       </p>
+
+      <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-neutral-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-neutral-300">
+        <p className="mb-2 font-medium text-neutral-700 dark:text-neutral-200">How to find your Telegram chat id:</p>
+        <ol className="list-decimal space-y-1 pl-4">
+          <li>Open Telegram (app or web).</li>
+          <li>
+            Search for{" "}
+            <a
+              href="https://t.me/userinfobot"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              @userinfobot
+            </a>{" "}
+            and open a chat with it.
+          </li>
+          <li>Send it any message, e.g. "hi".</li>
+          <li>It replies with your info — copy the number next to "Id".</li>
+          <li>Paste that number below.</li>
+        </ol>
+      </div>
 
       {!codeSent ? (
         <form onSubmit={handleSendCode} className="space-y-4">
