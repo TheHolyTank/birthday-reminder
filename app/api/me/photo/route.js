@@ -15,7 +15,8 @@ export async function PUT(request) {
   const { rows } = await sql`
     UPDATE users SET photo_url = ${photoUrl}
     WHERE id = ${userId}
-    RETURNING username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc;
+    RETURNING username, photo_url, telegram_chat_id, is_admin,
+              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
   `;
   return NextResponse.json(rows[0]);
 }

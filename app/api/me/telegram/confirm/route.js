@@ -39,7 +39,8 @@ export async function POST(request) {
         telegram_verify_code = NULL,
         telegram_verify_expires_at = NULL
     WHERE id = ${userId}
-    RETURNING username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc;
+    RETURNING username, photo_url, telegram_chat_id, is_admin,
+              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
   `;
 
   return NextResponse.json(updated[0]);

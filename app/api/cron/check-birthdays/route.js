@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { sendTelegramReminder } from "@/lib/telegram";
-import { toISODate } from "@/lib/date";
 import { timingSafeEqualStr } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -30,32 +29,42 @@ export async function GET(request) {
 
   await ensureSchema();
 
-  const now = new Date();
-  const todayUtc = toISODate(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
-  const currentHourUtc = now.getUTCHours();
-
-  // Each account picks its own delivery hour (UTC) and whether to be
-  // reminded the day before or the day of the birthday, so "today's target
-  // date" is computed per-user (todayUtc + their offset), not once globally.
-  // Vercel's free plan can only trigger this once a day, so an external
-  // hourly pinger (see README) is what actually makes reminder_hour_utc
-  // precise — this route just answers "who's due right now" whenever it runs.
+  // Each account stores its own reminder hour AND UTC offset (captured from
+  // their browser when they saved it in Settings) — both are needed to
+  // compute "what date and hour is it for this person right now" correctly.
+  // Using only the server's own UTC calendar date here would be wrong for
+  // anyone not in UTC: e.g. someone at UTC+3 already has a new local date
+  // for the first ~3 hours of their day while UTC's date hasn't rolled over
+  // yet, so birthday matching against UTC's date would silently miss.
   const { rows } = await sql`
+    WITH targets AS (
+      SELECT
+        u.id AS user_id,
+        u.telegram_chat_id,
+        u.reminder_offset_days,
+        (
+          ((now() AT TIME ZONE 'UTC') - (u.reminder_utc_offset_minutes * interval '1 minute'))::date
+          + u.reminder_offset_days
+        ) AS target_date
+      FROM users u
+      WHERE u.telegram_chat_id IS NOT NULL
+        AND u.reminder_local_hour = EXTRACT(
+          HOUR FROM ((now() AT TIME ZONE 'UTC') - (u.reminder_utc_offset_minutes * interval '1 minute'))
+        )::int
+    )
     SELECT
       f.id, f.name, f.birthday, f.note,
-      u.telegram_chat_id, u.reminder_offset_days,
-      EXTRACT(YEAR FROM (${todayUtc}::date + u.reminder_offset_days))::int AS target_year,
-      EXTRACT(MONTH FROM (${todayUtc}::date + u.reminder_offset_days))::int AS target_month,
-      EXTRACT(DAY FROM (${todayUtc}::date + u.reminder_offset_days))::int AS target_day
+      t.telegram_chat_id, t.reminder_offset_days,
+      EXTRACT(YEAR FROM t.target_date)::int AS target_year,
+      EXTRACT(MONTH FROM t.target_date)::int AS target_month,
+      EXTRACT(DAY FROM t.target_date)::int AS target_day
     FROM friends f
-    JOIN users u ON u.id = f.user_id
-    WHERE u.telegram_chat_id IS NOT NULL
-      AND u.reminder_hour_utc = ${currentHourUtc}
-      AND EXTRACT(MONTH FROM f.birthday) = EXTRACT(MONTH FROM (${todayUtc}::date + u.reminder_offset_days))
-      AND EXTRACT(DAY FROM f.birthday) = EXTRACT(DAY FROM (${todayUtc}::date + u.reminder_offset_days))
+    JOIN targets t ON t.user_id = f.user_id
+    WHERE EXTRACT(MONTH FROM f.birthday) = EXTRACT(MONTH FROM t.target_date)
+      AND EXTRACT(DAY FROM f.birthday) = EXTRACT(DAY FROM t.target_date)
       AND (
         f.last_reminded_year IS NULL
-        OR f.last_reminded_year <> EXTRACT(YEAR FROM (${todayUtc}::date + u.reminder_offset_days))
+        OR f.last_reminded_year <> EXTRACT(YEAR FROM t.target_date)
       );
   `;
 

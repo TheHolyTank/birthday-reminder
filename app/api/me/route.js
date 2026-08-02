@@ -10,7 +10,8 @@ export async function GET(request) {
   }
   await ensureSchema();
   const { rows } = await sql`
-    SELECT username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc
+    SELECT username, photo_url, telegram_chat_id, is_admin,
+           reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes
     FROM users WHERE id = ${userId};
   `;
   if (rows.length === 0) {
@@ -39,7 +40,8 @@ export async function PUT(request) {
     const { rows } = await sql`
       UPDATE users SET username = ${username}
       WHERE id = ${userId}
-      RETURNING username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc;
+      RETURNING username, photo_url, telegram_chat_id, is_admin,
+                reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
     `;
     return NextResponse.json(rows[0]);
   } catch (err) {
