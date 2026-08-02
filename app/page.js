@@ -190,7 +190,7 @@ export default function Home() {
   const [photoDragging, setPhotoDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  const [birthdayMode, setBirthdayMode] = useState("calendar");
+  const [birthdayMode, setBirthdayMode] = useState("type");
   const [typedBirthday, setTypedBirthday] = useState("");
 
   const [activeGroup, setActiveGroup] = useState("all");
@@ -269,7 +269,7 @@ export default function Home() {
   function cancelEditFriend() {
     setEditingFriendId(null);
     setPhotoError("");
-    setBirthdayMode("calendar");
+    setBirthdayMode("type");
     setTypedBirthday("");
     setFriendForm(emptyFriendForm);
   }
@@ -365,7 +365,7 @@ export default function Home() {
       }
       setFriendForm(emptyFriendForm);
       setEditingFriendId(null);
-      setBirthdayMode("calendar");
+      setBirthdayMode("type");
       setTypedBirthday("");
       await loadAll();
     } catch (err) {
