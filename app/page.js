@@ -224,12 +224,8 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [me, setMe] = useState({ email: "", name: null, telegram_chat_id: null, is_admin: false });
+  const [me, setMe] = useState({ username: "", telegram_chat_id: null, is_admin: false });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
-
-  const [nameInput, setNameInput] = useState("");
-  const [savingName, setSavingName] = useState(false);
-  const [nameSaved, setNameSaved] = useState(false);
 
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
@@ -294,7 +290,6 @@ export default function Home() {
       setGroups(await groupsRes.json());
       const meData = await meRes.json();
       setMe(meData);
-      setNameInput(meData.name || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
     } catch (err) {
       setError(err.message);
@@ -545,32 +540,6 @@ export default function Home() {
     }
   }
 
-  async function handleNameSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setNameSaved(false);
-    setSavingName(true);
-    try {
-      const res = await apiFetch("/api/me", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameInput }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to save name");
-      }
-      const updated = await res.json();
-      setMe(updated);
-      setNameInput(updated.name || "");
-      setNameSaved(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSavingName(false);
-    }
-  }
-
   async function handlePasswordSubmit(e) {
     e.preventDefault();
     setPasswordResult(null);
@@ -694,9 +663,9 @@ export default function Home() {
         <h1 className="mt-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 bg-clip-text font-display text-4xl font-bold text-transparent sm:text-5xl">
           Birthday Reminder
         </h1>
-        {me.email && (
+        {me.username && (
           <p className="mt-2 font-display text-lg font-semibold text-neutral-700 dark:text-neutral-200">
-            Hello, {me.name || me.email.split("@")[0]} 👋
+            Hello, {me.username} 👋
           </p>
         )}
         <p className="mx-auto mt-3 max-w-md text-neutral-500 dark:text-neutral-400">
@@ -771,43 +740,8 @@ export default function Home() {
       {showSettingsPanel && (
         <div className="mb-8 space-y-6 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
           <div>
-            <h2 className="mb-1 font-display text-base font-semibold">Profile</h2>
-            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Signed in as {me.email}</p>
-            <form onSubmit={handleNameSubmit} className="flex flex-wrap items-end gap-3">
-              <div className="min-w-[10rem] flex-1">
-                <label htmlFor="profile-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                  Name
-                </label>
-                <input
-                  id="profile-name"
-                  type="text"
-                  value={nameInput}
-                  onChange={(e) => {
-                    setNameInput(e.target.value);
-                    setNameSaved(false);
-                  }}
-                  className={inputClass}
-                  placeholder="e.g. Asaf"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={savingName}
-                className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-              >
-                {savingName ? "Saving…" : "Save"}
-              </button>
-              {nameSaved && (
-                <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                  <IconCheck className="h-4 w-4" />
-                  Saved
-                </span>
-              )}
-            </form>
-          </div>
-
-          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
             <h2 className="mb-3 font-display text-base font-semibold">Password</h2>
+            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Signed in as {me.username}</p>
             <form onSubmit={handlePasswordSubmit} className="flex flex-wrap items-end gap-3">
               <div className="min-w-[10rem] flex-1">
                 <label htmlFor="current-password" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">

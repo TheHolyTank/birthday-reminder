@@ -10,17 +10,17 @@ export async function POST(request) {
   await ensureSchema();
 
   const body = await request.json().catch(() => ({}));
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const username = typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "";
 
-  const fail = () => NextResponse.json({ error: "Incorrect email or password" }, { status: 401 });
-  if (!email || !password) return fail();
+  const fail = () => NextResponse.json({ error: "Incorrect username or password" }, { status: 401 });
+  if (!username || !password) return fail();
 
-  const { rows } = await sql`SELECT id, password_hash FROM users WHERE email = ${email};`;
+  const { rows } = await sql`SELECT id, password_hash FROM users WHERE username = ${username};`;
 
   if (rows.length === 0) {
     // Burn equivalent time to the real-user path so response latency can't
-    // be used to enumerate which emails have accounts.
+    // be used to enumerate which usernames have accounts.
     await verifyPasswordHash(password, DUMMY_PASSWORD_HASH);
     return fail();
   }

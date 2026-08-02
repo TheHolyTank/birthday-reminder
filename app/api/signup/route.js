@@ -16,7 +16,7 @@ export async function POST(request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
-  const { email, password, inviteCode } = result.data;
+  const { username, password, inviteCode } = result.data;
 
   if (!timingSafeEqualStr(inviteCode, process.env.SITE_PASSWORD)) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 401 });
@@ -27,12 +27,12 @@ export async function POST(request) {
   let userId;
   try {
     const { rows } = await sql`
-      INSERT INTO users (email, password_hash) VALUES (${email}, ${passwordHash}) RETURNING id;
+      INSERT INTO users (username, password_hash) VALUES (${username}, ${passwordHash}) RETURNING id;
     `;
     userId = rows[0].id;
   } catch (err) {
     if (String(err.message).includes("duplicate key")) {
-      return NextResponse.json({ error: "An account with that email already exists" }, { status: 409 });
+      return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
     }
     throw err;
   }
