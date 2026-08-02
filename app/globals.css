@@ -12,13 +12,3 @@ html.dark body {
   background-color: #000;
   background-image: none;
 }
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  border-radius: 0.375rem;
-  padding: 0.15rem;
-}
-
-html.dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}

@@ -2,10 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GROUP_COLOR_SWATCHES, DEFAULT_GROUP_COLOR, groupStyle } from "@/lib/colors";
-import { parseTypedDate } from "@/lib/date";
+import { parseTypedDate, isValidDate, toISODate } from "@/lib/date";
 
 const emptyFriendForm = { name: "", birthday: "", note: "", groupId: "", photoUrl: "" };
 const emptyGroupForm = { name: "", color: DEFAULT_GROUP_COLOR };
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const CURRENT_YEAR = new Date().getFullYear();
+const BIRTH_YEARS = Array.from({ length: 111 }, (_, i) => CURRENT_YEAR - i);
 
 function daysUntilNextBirthday(birthday) {
   const today = new Date();
@@ -271,6 +278,25 @@ export default function Home() {
     setTypedBirthday(value);
     const parsed = parseTypedDate(value);
     setFriendForm((f) => ({ ...f, birthday: parsed || "" }));
+  }
+
+  const [birthdayYear, birthdayMonth, birthdayDay] = friendForm.birthday
+    ? friendForm.birthday.split("-").map(Number)
+    : [undefined, undefined, undefined];
+
+  const daysInSelectedMonth =
+    birthdayYear && birthdayMonth ? new Date(birthdayYear, birthdayMonth, 0).getDate() : 31;
+
+  function handleCalendarPartChange(part, value) {
+    const next = {
+      year: birthdayYear,
+      month: birthdayMonth,
+      day: birthdayDay,
+      [part]: value ? Number(value) : undefined,
+    };
+    const complete =
+      next.year && next.month && next.day && isValidDate(next.year, next.month, next.day);
+    setFriendForm((f) => ({ ...f, birthday: complete ? toISODate(next.year, next.month, next.day) : "" }));
   }
 
   async function handlePhotoFile(file) {
@@ -750,13 +776,50 @@ export default function Home() {
             </div>
 
             {birthdayMode === "calendar" ? (
-              <input
-                required
-                type="date"
-                value={friendForm.birthday}
-                onChange={(e) => setFriendForm({ ...friendForm, birthday: e.target.value })}
-                className={inputClass}
-              />
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  required
+                  value={birthdayDay ?? ""}
+                  onChange={(e) => handleCalendarPartChange("day", e.target.value)}
+                  className={inputClass}
+                  aria-label="Day"
+                >
+                  <option value="">Day</option>
+                  {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  required
+                  value={birthdayMonth ?? ""}
+                  onChange={(e) => handleCalendarPartChange("month", e.target.value)}
+                  className={inputClass}
+                  aria-label="Month"
+                >
+                  <option value="">Month</option>
+                  {MONTH_NAMES.map((name, i) => (
+                    <option key={name} value={i + 1}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  required
+                  value={birthdayYear ?? ""}
+                  onChange={(e) => handleCalendarPartChange("year", e.target.value)}
+                  className={inputClass}
+                  aria-label="Year"
+                >
+                  <option value="">Year</option>
+                  {BIRTH_YEARS.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
             ) : (
               <div>
                 <input
