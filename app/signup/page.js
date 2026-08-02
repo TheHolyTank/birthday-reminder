@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const inputClass =
   "w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/20";
@@ -131,6 +131,14 @@ function TelegramStep() {
   const [sending, setSending] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
+  const [botUsername, setBotUsername] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/bot-info")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => body?.username && setBotUsername(body.username))
+      .catch(() => {});
+  }, []);
 
   async function handleSendCode(e) {
     e.preventDefault();
@@ -180,11 +188,30 @@ function TelegramStep() {
       </p>
 
       <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-neutral-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-neutral-300">
-        <p className="mb-2 font-medium text-neutral-700 dark:text-neutral-200">How to find your Telegram chat id:</p>
+        <p className="mb-2 font-medium text-neutral-700 dark:text-neutral-200">How to connect Telegram:</p>
         <ol className="list-decimal space-y-1 pl-4">
           <li>Open Telegram (app or web).</li>
           <li>
-            Search for{" "}
+            Message our reminder bot —{" "}
+            {botUsername ? (
+              <a
+                href={`https://t.me/${botUsername}`}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                @{botUsername}
+              </a>
+            ) : (
+              "the bot the person who invited you set up"
+            )}{" "}
+            — and send it any message, e.g. "hi". This step is required:
+            Telegram bots can't message you until you've messaged them first,
+            so without this your reminders (and the code below) can't be
+            delivered.
+          </li>
+          <li>
+            Then message{" "}
             <a
               href="https://t.me/userinfobot"
               target="_blank"
@@ -193,10 +220,9 @@ function TelegramStep() {
             >
               @userinfobot
             </a>{" "}
-            and open a chat with it.
+            the same way — it replies with your info; copy the number next to
+            "Id".
           </li>
-          <li>Send it any message, e.g. "hi".</li>
-          <li>It replies with your info — copy the number next to "Id".</li>
           <li>Paste that number below.</li>
         </ol>
       </div>
