@@ -9,7 +9,10 @@ export async function GET(request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   await ensureSchema();
-  const { rows } = await sql`SELECT username, photo_url, telegram_chat_id, is_admin FROM users WHERE id = ${userId};`;
+  const { rows } = await sql`
+    SELECT username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc
+    FROM users WHERE id = ${userId};
+  `;
   if (rows.length === 0) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
@@ -36,7 +39,7 @@ export async function PUT(request) {
     const { rows } = await sql`
       UPDATE users SET username = ${username}
       WHERE id = ${userId}
-      RETURNING username, photo_url, telegram_chat_id, is_admin;
+      RETURNING username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc;
     `;
     return NextResponse.json(rows[0]);
   } catch (err) {

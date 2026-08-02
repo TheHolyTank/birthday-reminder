@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
+import { validateReminderSettingsPayload } from "@/lib/validate";
 
 export async function PUT(request) {
   const userId = getUserId(request);
@@ -10,10 +11,14 @@ export async function PUT(request) {
   await ensureSchema();
 
   const body = await request.json().catch(() => null);
-  const photoUrl = typeof body?.photoUrl === "string" && body.photoUrl ? body.photoUrl : null;
+  const result = validateReminderSettingsPayload(body);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+  const { offsetDays, hourUtc } = result.data;
 
   const { rows } = await sql`
-    UPDATE users SET photo_url = ${photoUrl}
+    UPDATE users SET reminder_offset_days = ${offsetDays}, reminder_hour_utc = ${hourUtc}
     WHERE id = ${userId}
     RETURNING username, photo_url, telegram_chat_id, is_admin, reminder_offset_days, reminder_hour_utc;
   `;
