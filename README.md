@@ -56,8 +56,18 @@ Your site will be live at `https://<your-project>.vercel.app`.
 
 Each account chooses its own reminder timing in **⚙ Settings**: whether to
 be notified the **day before** or the **day of** each friend's birthday, and
-at what hour — shown and picked in *your own local time*, stored internally
-as a UTC hour. This is per-account, not a single global setting.
+at what hour — shown and picked in *your own local time*. This is
+per-account, not a single global setting.
+
+Under the hood this stores your chosen hour **and** your current UTC offset
+(captured automatically from your browser each time you save), and both are
+used together to work out "what date and hour is it for you right now."
+Storing only a pre-converted UTC hour isn't enough — anyone not in UTC has
+a calendar date that rolls over locally before (or after) UTC's own date
+does, so date-matching against UTC's date alone silently misses part of the
+day. One consequence: the stored offset is a plain fixed number, not a full
+timezone, so it goes stale across a daylight-saving transition until you
+next open Settings and save again (which refreshes it).
 
 **Important — this needs one extra piece to actually be accurate.** Vercel's
 free (Hobby) plan only triggers its own built-in cron (`vercel.json`) **once
