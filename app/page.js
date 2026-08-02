@@ -883,53 +883,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Group filter bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setActiveGroup("all")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            activeGroup === "all" ? activePillClass : neutralPillClass
-          }`}
-        >
-          All
-        </button>
-        {groups.map((g) => {
-          const isActive = activeGroup === String(g.id);
-          const s = groupStyle(g.color, dark);
-          return (
-            <button
-              key={g.id}
-              onClick={() => setActiveGroup(String(g.id))}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                isActive ? "" : neutralPillClass
-              }`}
-              style={
-                isActive
-                  ? { backgroundColor: s.badge.backgroundColor, color: s.badge.color, boxShadow: `0 0 0 2px ${s.hex}` }
-                  : undefined
-              }
-            >
-              <GroupDot color={g.color} />
-              {g.name}
-            </button>
-          );
-        })}
-        <button
-          onClick={() => setActiveGroup("ungrouped")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            activeGroup === "ungrouped" ? activePillClass : neutralPillClass
-          }`}
-        >
-          Ungrouped
-        </button>
-        <button
-          onClick={() => setShowGroupPanel((v) => !v)}
-          className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
-        >
-          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
-        </button>
-      </div>
-
       {/* Account settings panel */}
       {showSettingsPanel && (
         <div className="mb-8 space-y-6 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
@@ -1280,143 +1233,6 @@ export default function Home() {
               </p>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Manage groups panel */}
-      {showGroupPanel && (
-        <div className="mb-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
-          <h2 className="mb-3 font-display text-base font-semibold">Manage groups</h2>
-
-          {groups.length > 0 && (
-            <ul className="mb-4 space-y-2">
-              {groups.map((g) => {
-                const isEditingThis = editingGroupId === g.id;
-                const s = groupStyle(g.color, dark);
-                return (
-                  <li
-                    key={g.id}
-                    className={`rounded-xl border px-3.5 py-2.5 ${
-                      isEditingThis ? "border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800" : ""
-                    }`}
-                    style={isEditingThis ? undefined : s.badge}
-                  >
-                    {isEditingThis ? (
-                      <form
-                        onSubmit={(e) => handleEditGroupSubmit(e, g.id)}
-                        className="flex flex-wrap items-start gap-3"
-                      >
-                        <div className="min-w-[8rem] flex-1">
-                          <input
-                            required
-                            type="text"
-                            value={editGroupForm.name}
-                            onChange={(e) =>
-                              setEditGroupForm({ ...editGroupForm, name: e.target.value })
-                            }
-                            className={inputClass}
-                          />
-                          <div className="mt-2">
-                            <ColorGrid
-                              value={editGroupForm.color}
-                              onChange={(color) => setEditGroupForm({ ...editGroupForm, color })}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            type="submit"
-                            disabled={savingGroup}
-                            className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEditGroup}
-                            className="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-                          <GroupDot color={g.color} />
-                          {g.name}
-                        </span>
-                        {confirmDeleteGroupId === g.id ? (
-                          <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-neutral-500 dark:text-neutral-400">Delete?</span>
-                            <button
-                              onClick={() => performDeleteGroup(g.id)}
-                              className={`rounded-full px-2.5 py-1 font-medium transition ${dangerPillClass}`}
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteGroupId(null)}
-                              className={`rounded-full px-2.5 py-1 font-medium transition ${neutralPillClass}`}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => startEditGroup(g)}
-                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
-                              aria-label={`Edit ${g.name}`}
-                            >
-                              <IconPencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteGroupId(g.id)}
-                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
-                              aria-label={`Delete ${g.name}`}
-                            >
-                              <IconTrash className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          <form onSubmit={handleGroupSubmit} className="space-y-3">
-            <div>
-              <label htmlFor="group-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                New group name
-              </label>
-              <input
-                required
-                id="group-name"
-                type="text"
-                value={groupForm.name}
-                onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
-                className={inputClass}
-                placeholder="e.g. College"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                Color
-              </label>
-              <ColorGrid value={groupForm.color} onChange={(color) => setGroupForm({ ...groupForm, color })} />
-            </div>
-            <button
-              type="submit"
-              disabled={savingGroup}
-              className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              Add group
-            </button>
-          </form>
         </div>
       )}
 
@@ -1852,6 +1668,190 @@ export default function Home() {
           })}
         </ul>
       </section>
+
+      {/* Group filter bar */}
+      <div className="mb-6 mt-10 flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+        <button
+          onClick={() => setActiveGroup("all")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            activeGroup === "all" ? activePillClass : neutralPillClass
+          }`}
+        >
+          All
+        </button>
+        {groups.map((g) => {
+          const isActive = activeGroup === String(g.id);
+          const s = groupStyle(g.color, dark);
+          return (
+            <button
+              key={g.id}
+              onClick={() => setActiveGroup(String(g.id))}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                isActive ? "" : neutralPillClass
+              }`}
+              style={
+                isActive
+                  ? { backgroundColor: s.badge.backgroundColor, color: s.badge.color, boxShadow: `0 0 0 2px ${s.hex}` }
+                  : undefined
+              }
+            >
+              <GroupDot color={g.color} />
+              {g.name}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setActiveGroup("ungrouped")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            activeGroup === "ungrouped" ? activePillClass : neutralPillClass
+          }`}
+        >
+          Ungrouped
+        </button>
+        <button
+          onClick={() => setShowGroupPanel((v) => !v)}
+          className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+        >
+          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
+        </button>
+      </div>
+
+      {/* Manage groups panel */}
+      {showGroupPanel && (
+        <div className="mb-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
+          <h2 className="mb-3 font-display text-base font-semibold">Manage groups</h2>
+
+          {groups.length > 0 && (
+            <ul className="mb-4 space-y-2">
+              {groups.map((g) => {
+                const isEditingThis = editingGroupId === g.id;
+                const s = groupStyle(g.color, dark);
+                return (
+                  <li
+                    key={g.id}
+                    className={`rounded-xl border px-3.5 py-2.5 ${
+                      isEditingThis ? "border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800" : ""
+                    }`}
+                    style={isEditingThis ? undefined : s.badge}
+                  >
+                    {isEditingThis ? (
+                      <form
+                        onSubmit={(e) => handleEditGroupSubmit(e, g.id)}
+                        className="flex flex-wrap items-start gap-3"
+                      >
+                        <div className="min-w-[8rem] flex-1">
+                          <input
+                            required
+                            type="text"
+                            value={editGroupForm.name}
+                            onChange={(e) =>
+                              setEditGroupForm({ ...editGroupForm, name: e.target.value })
+                            }
+                            className={inputClass}
+                          />
+                          <div className="mt-2">
+                            <ColorGrid
+                              value={editGroupForm.color}
+                              onChange={(color) => setEditGroupForm({ ...editGroupForm, color })}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            disabled={savingGroup}
+                            className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditGroup}
+                            className="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+                          <GroupDot color={g.color} />
+                          {g.name}
+                        </span>
+                        {confirmDeleteGroupId === g.id ? (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-neutral-500 dark:text-neutral-400">Delete?</span>
+                            <button
+                              onClick={() => performDeleteGroup(g.id)}
+                              className={`rounded-full px-2.5 py-1 font-medium transition ${dangerPillClass}`}
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteGroupId(null)}
+                              className={`rounded-full px-2.5 py-1 font-medium transition ${neutralPillClass}`}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => startEditGroup(g)}
+                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
+                              aria-label={`Edit ${g.name}`}
+                            >
+                              <IconPencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteGroupId(g.id)}
+                              className="rounded-lg p-1.5 opacity-70 transition hover:opacity-100"
+                              aria-label={`Delete ${g.name}`}
+                            >
+                              <IconTrash className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <form onSubmit={handleGroupSubmit} className="space-y-3">
+            <div>
+              <label htmlFor="group-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                New group name
+              </label>
+              <input
+                required
+                id="group-name"
+                type="text"
+                value={groupForm.name}
+                onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
+                className={inputClass}
+                placeholder="e.g. College"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                Color
+              </label>
+              <ColorGrid value={groupForm.color} onChange={(color) => setGroupForm({ ...groupForm, color })} />
+            </div>
+            <button
+              type="submit"
+              disabled={savingGroup}
+              className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              Add group
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
