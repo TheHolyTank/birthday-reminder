@@ -224,12 +224,16 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [me, setMe] = useState({ username: "", name: null, telegram_chat_id: null, is_admin: false });
+  const [me, setMe] = useState({ username: "", photo_url: null, telegram_chat_id: null, is_admin: false });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
-  const [nameInput, setNameInput] = useState("");
-  const [savingName, setSavingName] = useState(false);
-  const [nameSaved, setNameSaved] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [usernameResult, setUsernameResult] = useState(null); // { ok, message } | null
+
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [photoResult, setPhotoResult] = useState(null); // { ok, message } | null
+  const profilePhotoInputRef = useRef(null);
 
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
@@ -294,7 +298,7 @@ export default function Home() {
       setGroups(await groupsRes.json());
       const meData = await meRes.json();
       setMe(meData);
-      setNameInput(meData.name || "");
+      setUsernameInput(meData.username || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
     } catch (err) {
       setError(err.message);
@@ -545,29 +549,72 @@ export default function Home() {
     }
   }
 
-  async function handleNameSubmit(e) {
+  async function handleUsernameSubmit(e) {
     e.preventDefault();
-    setError("");
-    setNameSaved(false);
-    setSavingName(true);
+    setUsernameResult(null);
+    setSavingUsername(true);
     try {
       const res = await apiFetch("/api/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameInput }),
+        body: JSON.stringify({ username: usernameInput }),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to save name");
-      }
-      const updated = await res.json();
-      setMe(updated);
-      setNameInput(updated.name || "");
-      setNameSaved(true);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to save username");
+      setMe(body);
+      setUsernameInput(body.username || "");
+      setUsernameResult({ ok: true, message: "Username updated." });
     } catch (err) {
-      setError(err.message);
+      setUsernameResult({ ok: false, message: err.message });
     } finally {
-      setSavingName(false);
+      setSavingUsername(false);
+    }
+  }
+
+  async function handleProfilePhotoFile(file) {
+    if (!file) return;
+    setPhotoResult(null);
+    if (!file.type.startsWith("image/")) {
+      setPhotoResult({ ok: false, message: "Please choose an image file" });
+      return;
+    }
+    setSavingPhoto(true);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      const res = await apiFetch("/api/me/photo", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrl: dataUrl }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to save photo");
+      setMe(body);
+      setPhotoResult({ ok: true, message: "Photo updated." });
+    } catch (err) {
+      setPhotoResult({ ok: false, message: err.message });
+    } finally {
+      setSavingPhoto(false);
+      if (profilePhotoInputRef.current) profilePhotoInputRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveProfilePhoto() {
+    setPhotoResult(null);
+    setSavingPhoto(true);
+    try {
+      const res = await apiFetch("/api/me/photo", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrl: null }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to remove photo");
+      setMe(body);
+      setPhotoResult({ ok: true, message: "Photo removed." });
+    } catch (err) {
+      setPhotoResult({ ok: false, message: err.message });
+    } finally {
+      setSavingPhoto(false);
     }
   }
 
