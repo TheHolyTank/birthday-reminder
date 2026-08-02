@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
-import { isValidUsername } from "@/lib/validate";
+import { isValidUsername, USERNAME_MAX_LENGTH } from "@/lib/validate";
 
 export async function GET(request) {
   const userId = getUserId(request);
@@ -27,7 +27,7 @@ export async function PUT(request) {
   const username = typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
   if (!isValidUsername(username)) {
     return NextResponse.json(
-      { error: `Username can only contain letters, numbers, "_", "-", "."` },
+      { error: `Username is required (max ${USERNAME_MAX_LENGTH} characters; letters, numbers, "_", "-", "." only)` },
       { status: 400 }
     );
   }

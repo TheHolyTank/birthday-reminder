@@ -890,6 +890,7 @@ export default function Home() {
                   required
                   id="profile-username"
                   type="text"
+                  maxLength={32}
                   value={usernameInput}
                   onChange={(e) => {
                     setUsernameInput(e.target.value);
