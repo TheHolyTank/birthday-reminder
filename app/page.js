@@ -249,6 +249,7 @@ export default function Home() {
   const [sendingCode, setSendingCode] = useState(false);
   const [confirmingCode, setConfirmingCode] = useState(false);
   const [telegramResult, setTelegramResult] = useState(null); // { ok, message } | null
+  const [botUsername, setBotUsername] = useState(null);
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -303,6 +304,10 @@ export default function Home() {
       setMe(meData);
       setUsernameInput(meData.username || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
+      apiFetch("/api/bot-info")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((body) => body?.username && setBotUsername(body.username))
+        .catch(() => {});
     } catch (err) {
       setError(err.message);
     } finally {
@@ -996,15 +1001,32 @@ export default function Home() {
 
           <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
             <h2 className="mb-1 font-display text-base font-semibold">Telegram</h2>
-            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="mb-1.5 text-sm text-neutral-500 dark:text-neutral-400">
               {me.telegram_chat_id ? (
                 <>
                   <span className="font-medium text-emerald-600 dark:text-emerald-400">✓ Connected</span> to chat id{" "}
-                  {me.telegram_chat_id}. Message{" "}
+                  {me.telegram_chat_id}.
                 </>
               ) : (
-                <>Not connected yet — reminders won't send until this is verified. Message </>
+                <>Not connected yet — reminders won't send until this is verified.</>
               )}
+            </p>
+            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">
+              First message{" "}
+              {botUsername ? (
+                <a
+                  href={`https://t.me/${botUsername}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  @{botUsername}
+                </a>
+              ) : (
+                "our reminder bot"
+              )}{" "}
+              (any message, e.g. "hi") — required, since Telegram bots can't
+              message you until you've messaged them first. Then message{" "}
               <a
                 href="https://t.me/userinfobot"
                 target="_blank"
@@ -1013,7 +1035,7 @@ export default function Home() {
               >
                 @userinfobot
               </a>{" "}
-              on Telegram to get your numeric chat id.
+              to get your numeric chat id.
             </p>
 
             {!codeSent ? (

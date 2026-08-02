@@ -75,15 +75,20 @@ per-user reminder time (yet).
      deployment**, the very first account ever created automatically inherits
      all previously-added friends/groups — nothing is lost, you're just
      "claiming" it once.
-   - **Step 2 (required)**: the page walks through finding your numeric
-     Telegram chat id (message **@userinfobot**, it replies with your info).
-     Enter it and click **Send verification code**. The bot replies with a
-     6-digit code — enter it back in the app to confirm. You can't reach the
-     main app until this is verified (it proves the chat id actually belongs
-     to you, not just that you typed a number that happened to be someone
-     else's). Note: this is only enforced during the sign-up flow itself — an
-     account that's already created and logged in isn't re-blocked from the
-     app if Telegram is ever disconnected later.
+   - **Step 2 (required)**: the page walks through connecting Telegram —
+     first message the app's own reminder bot (linked by name, looked up
+     automatically via Telegram's API) with anything, e.g. "hi". **This step
+     is easy to miss but required**: Telegram bots can't message you until
+     you've messaged them first, so skipping it means reminders (and the
+     verification code itself) can never be delivered. Then message
+     **@userinfobot** to get your numeric chat id, enter it, and click **Send
+     verification code**. The bot replies with a 6-digit code — enter it back
+     in the app to confirm. You can't reach the main app until this is
+     verified (it proves the chat id actually belongs to you, not just that
+     you typed a number that happened to be someone else's). Note: this is
+     only enforced during the sign-up flow itself — an account that's already
+     created and logged in isn't re-blocked from the app if Telegram is ever
+     disconnected later.
 2. Open **⚙ Settings** (next to "Log out") any time afterward to upload a
    profile photo, change your username, change your password, or
    reconnect/change your Telegram chat id.
