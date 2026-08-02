@@ -41,12 +41,12 @@ function formatBirthday(birthday) {
   return bday.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
 }
 
-// Renders a UTC hour (0-23, what's actually stored) as a label in the
-// viewer's own local time, so the picker reads naturally without needing a
-// separate stored timezone.
-function utcHourToLocalLabel(hour) {
+// Formats an hour (0-23, in whatever clock it's meant to represent — here,
+// the viewer's own local hour, stored as-is alongside their UTC offset) as
+// a friendly 12-hour label.
+function hourLabel(hour) {
   const d = new Date();
-  d.setUTCHours(hour, 0, 0, 0);
+  d.setHours(hour, 0, 0, 0);
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
@@ -242,7 +242,8 @@ export default function Home() {
     telegram_chat_id: null,
     is_admin: false,
     reminder_offset_days: 1,
-    reminder_hour_utc: 17,
+    reminder_local_hour: 20,
+    reminder_utc_offset_minutes: 0,
   });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
@@ -326,7 +327,7 @@ export default function Home() {
       setUsernameInput(meData.username || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
       setReminderOffsetInput(meData.reminder_offset_days ?? 1);
-      setReminderHourInput(meData.reminder_hour_utc ?? 17);
+      setReminderHourInput(meData.reminder_local_hour ?? 20);
       apiFetch("/api/bot-info")
         .then((res) => (res.ok ? res.json() : null))
         .then((body) => body?.username && setBotUsername(body.username))
@@ -749,7 +750,11 @@ export default function Home() {
       const res = await apiFetch("/api/me/reminder", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offsetDays: Number(reminderOffsetInput), hourUtc: Number(reminderHourInput) }),
+        body: JSON.stringify({
+          offsetDays: Number(reminderOffsetInput),
+          localHour: Number(reminderHourInput),
+          utcOffsetMinutes: new Date().getTimezoneOffset(),
+        }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "Failed to save reminder settings");
@@ -1214,7 +1219,7 @@ export default function Home() {
                 >
                   {Array.from({ length: 24 }, (_, h) => h).map((h) => (
                     <option key={h} value={h}>
-                      {utcHourToLocalLabel(h)}
+                      {hourLabel(h)}
                     </option>
                   ))}
                 </select>
