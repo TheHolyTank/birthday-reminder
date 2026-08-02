@@ -224,7 +224,7 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [me, setMe] = useState({ email: "", name: null, telegram_chat_id: null });
+  const [me, setMe] = useState({ email: "", name: null, telegram_chat_id: null, is_admin: false });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
   const [nameInput, setNameInput] = useState("");
@@ -668,6 +668,14 @@ export default function Home() {
         >
           {showSettingsPanel ? "Close settings" : "⚙ Settings"}
         </button>
+        {me.is_admin && (
+          <a
+            href="/admin"
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-indigo-600 shadow-softer ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            🛡 Admin
+          </a>
+        )}
       </div>
       <button
         onClick={toggleTheme}

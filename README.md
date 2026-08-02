@@ -95,6 +95,13 @@ Anyone else you share the invite code with can sign up for their own account,
 with their own friends, groups, and Telegram chat id — completely separate
 from yours.
 
+**Admin:** the very first account ever created (yours, if you're the
+deployer) is automatically the admin. A **🛡 Admin** link appears next to
+"Log out" for that account only, showing every signed-up user (email, name,
+Telegram-connected status, join date) with the ability to reset anyone's
+password or delete their account entirely (including all their friends and
+groups). There's currently no way to promote a second account to admin.
+
 ## Local development
 
 Requires [Node.js](https://nodejs.org) (LTS) installed.
