@@ -230,6 +230,9 @@ export default function Home() {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [telegramChatIdInput, setTelegramChatIdInput] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+  const [testingTelegram, setTestingTelegram] = useState(false);
+  const [testTelegramResult, setTestTelegramResult] = useState(null); // { ok: bool, message: string } | null
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -531,6 +534,8 @@ export default function Home() {
   async function handleSettingsSubmit(e) {
     e.preventDefault();
     setError("");
+    setSettingsSaved(false);
+    setTestTelegramResult(null);
     setSavingSettings(true);
     try {
       const res = await apiFetch("/api/me", {
@@ -545,10 +550,30 @@ export default function Home() {
       const updated = await res.json();
       setMe(updated);
       setTelegramChatIdInput(updated.telegram_chat_id || "");
+      setSettingsSaved(true);
     } catch (err) {
       setError(err.message);
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  async function handleTestTelegram() {
+    setTestTelegramResult(null);
+    setTestingTelegram(true);
+    try {
+      const res = await apiFetch("/api/me/test-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramChatId: telegramChatIdInput }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to send test message");
+      setTestTelegramResult({ ok: true, message: "Test message sent — check Telegram." });
+    } catch (err) {
+      setTestTelegramResult({ ok: false, message: err.message });
+    } finally {
+      setTestingTelegram(false);
     }
   }
 
@@ -684,7 +709,11 @@ export default function Home() {
                 id="telegram-chat-id"
                 type="text"
                 value={telegramChatIdInput}
-                onChange={(e) => setTelegramChatIdInput(e.target.value)}
+                onChange={(e) => {
+                  setTelegramChatIdInput(e.target.value);
+                  setSettingsSaved(false);
+                  setTestTelegramResult(null);
+                }}
                 className={inputClass}
                 placeholder="e.g. 987654321"
               />
@@ -694,9 +723,37 @@ export default function Home() {
               disabled={savingSettings}
               className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
             >
-              Save
+              {savingSettings ? "Saving…" : "Save"}
             </button>
+            <button
+              type="button"
+              onClick={handleTestTelegram}
+              disabled={testingTelegram || !telegramChatIdInput.trim()}
+              className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              {testingTelegram ? "Sending…" : "Send test message"}
+            </button>
+            {settingsSaved && (
+              <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                <IconCheck className="h-4 w-4" />
+                Saved
+              </span>
+            )}
           </form>
+          {testTelegramResult && (
+            <p
+              role="alert"
+              aria-live="polite"
+              className={`mt-3 text-sm ${
+                testTelegramResult.ok
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}
+            >
+              {testTelegramResult.ok ? "✓ " : ""}
+              {testTelegramResult.message}
+            </p>
+          )}
         </div>
       )}
 
