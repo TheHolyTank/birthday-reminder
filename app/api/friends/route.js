@@ -10,7 +10,7 @@ export async function GET(request) {
   }
   await ensureSchema();
   const { rows } = await sql`
-    SELECT f.id, f.name, f.birthday, f.note, f.photo_url, f.group_id, f.last_reminded_year,
+    SELECT f.id, f.name, f.birthday, f.note, f.photo_url, f.group_id, f.last_reminded_year, f.created_at,
            g.name AS group_name, g.color AS group_color
     FROM friends f
     LEFT JOIN groups g ON g.id = f.group_id

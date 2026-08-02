@@ -235,6 +235,7 @@ export default function Home() {
   const [confirmDeleteFriendId, setConfirmDeleteFriendId] = useState(null);
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortMode, setSortMode] = useState("birthday"); // birthday | name | group | recent
 
   const [me, setMe] = useState({
     username: "",
@@ -360,15 +361,47 @@ export default function Home() {
     if (query) {
       list = list.filter((f) => f.name.toLowerCase().includes(query));
     }
-    return [...list].sort(
-      (a, b) => daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday)
-    );
-  }, [friends, activeGroup, searchQuery]);
+    const sorted = [...list];
+    if (sortMode === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === "group") {
+      sorted.sort((a, b) => {
+        if (!a.group_name && !b.group_name) {
+          return daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday);
+        }
+        if (!a.group_name) return 1; // ungrouped sorts last
+        if (!b.group_name) return -1;
+        const cmp = a.group_name.localeCompare(b.group_name);
+        return cmp !== 0 ? cmp : daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday);
+      });
+    } else if (sortMode === "recent") {
+      sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      sorted.sort((a, b) => daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday));
+    }
+    return sorted;
+  }, [friends, activeGroup, searchQuery, sortMode]);
 
   const birthdaysThisWeek = useMemo(
     () => friends.filter((f) => daysUntilNextBirthday(f.birthday) <= 7).length,
     [friends]
   );
+
+  // Friends whose upcoming birthday falls within 6 days of another friend's —
+  // considered across the whole list, not just the currently filtered view.
+  const clusteredFriendIds = useMemo(() => {
+    const withDays = friends.map((f) => ({ id: f.id, days: daysUntilNextBirthday(f.birthday) }));
+    const clustered = new Set();
+    for (let i = 0; i < withDays.length; i++) {
+      for (let j = i + 1; j < withDays.length; j++) {
+        if (Math.abs(withDays[i].days - withDays[j].days) <= 6) {
+          clustered.add(withDays[i].id);
+          clustered.add(withDays[j].id);
+        }
+      }
+    }
+    return clustered;
+  }, [friends]);
 
   function syncCalendarPartsFromBirthday(birthday) {
     if (birthday) {
@@ -1657,17 +1690,30 @@ export default function Home() {
 
       {/* Friends list */}
       <section>
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Upcoming birthdays</h2>
           {friends.length > 0 && (
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name"
-              aria-label="Search friends by name"
-              className={`${inputClass} max-w-[12rem]`}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value)}
+                aria-label="Sort friends"
+                className={`${inputClass} w-auto`}
+              >
+                <option value="birthday">Sort: Soonest birthday</option>
+                <option value="name">Sort: Name (A–Z)</option>
+                <option value="group">Sort: Group</option>
+                <option value="recent">Sort: Recently added</option>
+              </select>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name"
+                aria-label="Search friends by name"
+                className={`${inputClass} max-w-[12rem]`}
+              />
+            </div>
           )}
         </div>
 
@@ -1714,7 +1760,7 @@ export default function Home() {
             return (
               <li
                 key={friend.id}
-                className="flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-softer transition hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
+                className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-softer transition hover:shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
               >
                 {friend.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -1743,6 +1789,14 @@ export default function Home() {
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                         <IconCheck className="h-3 w-3" />
                         Reminded
+                      </span>
+                    )}
+                    {clusteredFriendIds.has(friend.id) && (
+                      <span
+                        title="Another friend's birthday falls within a week of this one"
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+                      >
+                        🎉 Same week
                       </span>
                     )}
                     {activeGroup === "all" && <GroupBadge group={group} isDark={dark} />}
@@ -1776,7 +1830,7 @@ export default function Home() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity max-sm:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100">
                     <button
                       onClick={() => startEditFriend(friend)}
                       className="rounded-lg p-2 text-neutral-400 transition hover:bg-indigo-50 hover:text-indigo-600 dark:text-neutral-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
