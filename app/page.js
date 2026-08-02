@@ -201,9 +201,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [dark, setDark] = useState(() =>
-    typeof document === "undefined" ? false : document.documentElement.classList.contains("dark")
-  );
+  const [dark, setDark] = useState(false);
 
   const [friendForm, setFriendForm] = useState(emptyFriendForm);
   const [editingFriendId, setEditingFriendId] = useState(null);
@@ -233,6 +231,10 @@ export default function Home() {
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [testingTelegram, setTestingTelegram] = useState(false);
   const [testTelegramResult, setTestTelegramResult] = useState(null); // { ok: bool, message: string } | null
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");

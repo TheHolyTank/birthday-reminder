@@ -53,12 +53,14 @@ Your site will be live at `https://<your-project>.vercel.app`.
 
 ## 4. Set the reminder time
 
-By default, [vercel.json](vercel.json) runs the check daily at **17:00 UTC**.
-Vercel's free (Hobby) plan only supports UTC cron schedules, so convert your
-preferred local time to UTC and edit the `schedule` field, e.g.:
+By default, [vercel.json](vercel.json) runs the check daily at **17:30 UTC**
+(20:30 Israel Daylight Time). Vercel's free (Hobby) plan only supports fixed
+UTC cron schedules with no daylight-saving awareness, so this drifts to
+19:30 local during Israel Standard Time (roughly late October–late March) —
+shift it by one hour for that half of the year if you want to keep it exact:
 
 ```json
-"schedule": "0 17 * * *"
+"schedule": "30 17 * * *"
 ```
 
 (minute hour * * *). Redeploy after changing it. Since accounts can be in
