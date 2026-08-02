@@ -224,13 +224,24 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [me, setMe] = useState({ email: "", telegram_chat_id: null });
+  const [me, setMe] = useState({ email: "", name: null, telegram_chat_id: null });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+
+  const [nameInput, setNameInput] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
+
+  const [currentPasswordInput, setCurrentPasswordInput] = useState("");
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordResult, setPasswordResult] = useState(null); // { ok, message } | null
+
   const [telegramChatIdInput, setTelegramChatIdInput] = useState("");
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [settingsSaved, setSettingsSaved] = useState(false);
-  const [testingTelegram, setTestingTelegram] = useState(false);
-  const [testTelegramResult, setTestTelegramResult] = useState(null); // { ok: bool, message: string } | null
+  const [verificationCodeInput, setVerificationCodeInput] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [confirmingCode, setConfirmingCode] = useState(false);
+  const [telegramResult, setTelegramResult] = useState(null); // { ok, message } | null
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -283,6 +294,7 @@ export default function Home() {
       setGroups(await groupsRes.json());
       const meData = await meRes.json();
       setMe(meData);
+      setNameInput(meData.name || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
     } catch (err) {
       setError(err.message);
@@ -533,50 +545,104 @@ export default function Home() {
     }
   }
 
-  async function handleSettingsSubmit(e) {
+  async function handleNameSubmit(e) {
     e.preventDefault();
     setError("");
-    setSettingsSaved(false);
-    setTestTelegramResult(null);
-    setSavingSettings(true);
+    setNameSaved(false);
+    setSavingName(true);
     try {
       const res = await apiFetch("/api/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegramChatId: telegramChatIdInput }),
+        body: JSON.stringify({ name: nameInput }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to save settings");
+        throw new Error(body.error || "Failed to save name");
       }
       const updated = await res.json();
       setMe(updated);
-      setTelegramChatIdInput(updated.telegram_chat_id || "");
-      setSettingsSaved(true);
+      setNameInput(updated.name || "");
+      setNameSaved(true);
     } catch (err) {
       setError(err.message);
     } finally {
-      setSavingSettings(false);
+      setSavingName(false);
     }
   }
 
-  async function handleTestTelegram() {
-    setTestTelegramResult(null);
-    setTestingTelegram(true);
+  async function handlePasswordSubmit(e) {
+    e.preventDefault();
+    setPasswordResult(null);
+    setSavingPassword(true);
     try {
-      const res = await apiFetch("/api/me/test-telegram", {
+      const res = await apiFetch("/api/me/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: currentPasswordInput, newPassword: newPasswordInput }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to change password");
+      setCurrentPasswordInput("");
+      setNewPasswordInput("");
+      setPasswordResult({ ok: true, message: "Password changed." });
+    } catch (err) {
+      setPasswordResult({ ok: false, message: err.message });
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
+  async function handleSendCode(e) {
+    e.preventDefault();
+    setTelegramResult(null);
+    setSendingCode(true);
+    try {
+      const res = await apiFetch("/api/me/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramChatId: telegramChatIdInput }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Failed to send test message");
-      setTestTelegramResult({ ok: true, message: "Test message sent — check Telegram." });
+      if (!res.ok) throw new Error(body.error || "Failed to send code");
+      setCodeSent(true);
+      setVerificationCodeInput("");
+      setTelegramResult({ ok: true, message: "Code sent — check Telegram and enter it below." });
     } catch (err) {
-      setTestTelegramResult({ ok: false, message: err.message });
+      setTelegramResult({ ok: false, message: err.message });
     } finally {
-      setTestingTelegram(false);
+      setSendingCode(false);
     }
+  }
+
+  async function handleConfirmCode(e) {
+    e.preventDefault();
+    setTelegramResult(null);
+    setConfirmingCode(true);
+    try {
+      const res = await apiFetch("/api/me/telegram/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: verificationCodeInput }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to confirm code");
+      setMe(body);
+      setTelegramChatIdInput(body.telegram_chat_id || "");
+      setCodeSent(false);
+      setVerificationCodeInput("");
+      setTelegramResult({ ok: true, message: "Telegram connected ✓" });
+    } catch (err) {
+      setTelegramResult({ ok: false, message: err.message });
+    } finally {
+      setConfirmingCode(false);
+    }
+  }
+
+  function cancelTelegramVerification() {
+    setCodeSent(false);
+    setVerificationCodeInput("");
+    setTelegramResult(null);
   }
 
   const inputClass =
