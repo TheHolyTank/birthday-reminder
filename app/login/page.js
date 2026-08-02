@@ -8,6 +8,7 @@ const inputClass =
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +21,7 @@ function LoginForm() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -39,9 +40,26 @@ function LoginForm() {
       <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
         <h1 className="mb-1 font-display text-xl font-semibold">Birthday Reminder</h1>
         <p className="mb-5 text-sm text-neutral-500 dark:text-neutral-400">
-          Enter the site password to continue.
+          Log in to your account.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="login-email"
+              className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >
+              Email
+            </label>
+            <input
+              required
+              autoFocus
+              id="login-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputClass}
+            />
+          </div>
           <div>
             <label
               htmlFor="login-password"
@@ -51,7 +69,6 @@ function LoginForm() {
             </label>
             <input
               required
-              autoFocus
               id="login-password"
               type="password"
               value={password}
@@ -72,6 +89,12 @@ function LoginForm() {
             {submitting ? "Checking…" : "Log in"}
           </button>
         </form>
+        <p className="mt-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+          Need an account?{" "}
+          <a href="/signup" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+            Sign up
+          </a>
+        </p>
       </div>
     </main>
   );

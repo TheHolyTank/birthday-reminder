@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { validateFriendPayload, parsePositiveIntParam } from "@/lib/validate";
+import { getUserId } from "@/lib/auth";
 
 export async function PUT(request, { params }) {
+  const userId = getUserId(request);
+  if (!userId) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
   await ensureSchema();
   const id = parsePositiveIntParam(params.id);
   if (id === null) {
@@ -16,11 +21,18 @@ export async function PUT(request, { params }) {
   }
   const { name, birthday, note, groupId, photoUrl } = result.data;
 
+  if (groupId !== null) {
+    const owned = await sql`SELECT 1 FROM groups WHERE id = ${groupId} AND user_id = ${userId};`;
+    if (owned.rows.length === 0) {
+      return NextResponse.json({ error: "Invalid group" }, { status: 400 });
+    }
+  }
+
   const { rows } = await sql`
     UPDATE friends
     SET name = ${name}, birthday = ${birthday}, note = ${note},
         group_id = ${groupId}, photo_url = ${photoUrl}
-    WHERE id = ${id}
+    WHERE id = ${id} AND user_id = ${userId}
     RETURNING id, name, birthday, note, group_id, photo_url;
   `;
 
@@ -32,13 +44,17 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const userId = getUserId(request);
+  if (!userId) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
   await ensureSchema();
   const id = parsePositiveIntParam(params.id);
   if (id === null) {
     return NextResponse.json({ error: "Invalid friend id" }, { status: 400 });
   }
 
-  const { rows } = await sql`DELETE FROM friends WHERE id = ${id} RETURNING id;`;
+  const { rows } = await sql`DELETE FROM friends WHERE id = ${id} AND user_id = ${userId} RETURNING id;`;
   if (rows.length === 0) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

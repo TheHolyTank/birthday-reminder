@@ -1,23 +1,23 @@
 # Birthday Reminder
 
-A small Next.js app: add friends' birthdays, and every day it checks whether
-anyone's birthday is tomorrow and sends **you** a Telegram message reminding
-you to send your regards.
+A small multi-user Next.js app: each account tracks their own friends'
+birthdays, and every day it checks whose birthday is tomorrow and sends
+**them** a Telegram message reminding them to send their regards.
 
 - Frontend + API: Next.js (App Router), deployed on Vercel
-- Database: Vercel Postgres (free tier)
+- Database: Vercel Postgres (Neon-backed, free tier)
 - Daily check: Vercel Cron, once a day
-- Message send: Telegram Bot API (free, official, reliable)
+- Message send: Telegram Bot API (free, official, reliable) — one shared bot,
+  each account supplies its own chat id
+- Accounts: email + password, sign-up gated by a shared invite code
 
-## 1. Create a Telegram bot and get your chat ID
+## 1. Create a Telegram bot
 
 1. In Telegram, open a chat with **@BotFather**.
 2. Send `/newbot` and follow the prompts (pick any name and username for it).
-3. BotFather replies with a **token** that looks like `123456789:AAExampleTokenHere`. Save it.
-4. Now find your own numeric chat ID: open a chat with **@userinfobot** and send it any message. It replies with your **Id** (a number like `987654321`). Save it.
-5. Open a chat with the bot you just created (search its username) and send it any message (e.g. "hi") — Telegram bots can't message you until you've messaged them first.
+3. BotFather replies with a **token** that looks like `123456789:AAExampleTokenHere`. Save it — this goes into Vercel's env vars in step 3 (one bot token for the whole app; every account's reminders route through it).
 
-You now have two values: the bot token, and your chat ID. You'll put both into Vercel's environment variables in step 3.
+Each *user* (not just the deployer) will later message this same bot themselves and get their own chat id from **@userinfobot** — that's covered in step 5, it's an in-app setting, not something you configure per-deploy.
 
 ## 2. Push this project to GitHub
 
@@ -36,19 +36,17 @@ Then create a new (private, if you like) repo on GitHub and push this folder to 
 3. Go to the project's **Storage** tab → **Create Database** → **Marketplace
    Database Providers** → **Neon** (free tier), and connect it to this
    project. The integration automatically adds the `POSTGRES_URL` env var
-   this app reads (Vercel's older native "Postgres" product has been retired
-   in favor of this Neon-backed integration, but no code changes were needed).
+   this app reads.
 4. Go to **Environment Variables** and add:
-   - `TELEGRAM_BOT_TOKEN` — the token from step 1
-   - `TELEGRAM_CHAT_ID` — your chat ID from step 1
-   - `CRON_SECRET` — any random string you make up (e.g. mash your keyboard). Vercel
-     will automatically send this as a bearer token when it triggers the daily cron,
-     which stops randoms on the internet from triggering your reminders. **Required** —
-     if unset, the cron endpoint refuses all requests rather than allowing anyone to
-     trigger it.
-   - `SITE_PASSWORD` — any password you choose. The whole app is gated behind a
-     `/login` page that checks this password; you'll log in once and stay signed
-     in for 30 days. **Required** — without it, `/login` can't succeed.
+   - `TELEGRAM_BOT_TOKEN` — the token from step 1.
+   - `CRON_SECRET` — any random string you make up. Vercel automatically sends
+     this as a bearer token when it triggers the daily cron. **Required** — if
+     unset, the cron endpoint refuses all requests.
+   - `SITE_PASSWORD` — a shared **invite code**. Anyone who knows it can create
+     an account at `/signup`; this isn't a public sign-up product, it's a
+     private app you control access to. **Required**.
+   - `AUTH_SECRET` — any random string (e.g. `openssl rand -base64 32`), signs
+     session cookies. **Required**. Rotating it logs everyone out everywhere.
 5. Redeploy.
 
 Your site will be live at `https://<your-project>.vercel.app`.
@@ -63,14 +61,28 @@ preferred local time to UTC and edit the `schedule` field, e.g.:
 "schedule": "0 17 * * *"
 ```
 
-(minute hour * * *). Redeploy after changing it.
+(minute hour * * *). Redeploy after changing it. Since accounts can be in
+different timezones, this one schedule is shared by everyone — there's no
+per-user reminder time (yet).
 
 ## 5. Use it
 
-Open your Vercel URL, add friends with their name, birthday, and an optional
-note. The night before each birthday, you'll get a Telegram message like:
+1. Visit your Vercel URL and go to **Sign up**. Create an account with your
+   email, a password, and the `SITE_PASSWORD` invite code from step 3.
+   **If you're upgrading an existing single-user deployment**, the very first
+   account ever created automatically inherits all previously-added
+   friends/groups — nothing is lost, you're just "claiming" it once.
+2. Open **⚙ Telegram settings** in the app, message **@userinfobot** on
+   Telegram to get your numeric chat id, and paste it in. Reminders won't send
+   until this is set.
+3. Add friends with their name, birthday, and an optional note. The night
+   before each birthday, you'll get a Telegram message like:
 
-> 🎂 Reminder: it's Jane's (college roommate) birthday tomorrow, August 3! Don't forget to send your regards.
+   > 🎂 Reminder: it's Jane's (college roommate) birthday tomorrow, August 3! Don't forget to send your regards.
+
+Anyone else you share the invite code with can sign up for their own account,
+with their own friends, groups, and Telegram chat id — completely separate
+from yours.
 
 ## Local development
 
@@ -82,11 +94,10 @@ vercel env pull .env.local   # after linking the project with `vercel link`
 npm run dev
 ```
 
-`SITE_PASSWORD` and `CRON_SECRET` must be set in `.env.local` too (the app is
-gated by design — if either is missing, you won't be able to log in or run
-the cron check locally). The only paths that don't require being logged in
-are `/login`, `/api/login`, `/api/logout`, and `/api/cron/check-birthdays`
-(which has its own bearer-token check instead).
+`SITE_PASSWORD`, `AUTH_SECRET`, and `CRON_SECRET` must all be set in
+`.env.local` too. The only paths that don't require being logged in are
+`/login`, `/signup`, `/api/login`, `/api/signup`, `/api/logout`, and
+`/api/cron/check-birthdays` (which has its own bearer-token check instead).
 
 You can manually trigger the birthday check locally or in prod by visiting
 `/api/cron/check-birthdays` with an `Authorization: Bearer <CRON_SECRET>`
