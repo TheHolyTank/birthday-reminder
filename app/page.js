@@ -163,14 +163,15 @@ function GroupBadge({ group, isDark }) {
 function ColorGrid({ value, onChange }) {
   return (
     <div className="grid w-max grid-cols-8 gap-2">
-      {GROUP_COLOR_SWATCHES.map((hex) => {
+      {GROUP_COLOR_SWATCHES.map((hex, i) => {
         const selected = value === hex;
         return (
           <button
             type="button"
             key={hex}
             onClick={() => onChange(hex)}
-            aria-label={hex}
+            aria-label={`Color ${i + 1} of ${GROUP_COLOR_SWATCHES.length}`}
+            aria-pressed={selected}
             className="flex h-6 w-6 items-center justify-center rounded-full ring-offset-2 ring-offset-white transition dark:ring-offset-neutral-900"
             style={{
               backgroundColor: hex,
@@ -191,7 +192,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() =>
+    typeof document === "undefined" ? false : document.documentElement.classList.contains("dark")
+  );
 
   const [friendForm, setFriendForm] = useState(emptyFriendForm);
   const [editingFriendId, setEditingFriendId] = useState(null);
@@ -215,7 +218,20 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    function onChange(e) {
+      let explicit;
+      try {
+        explicit = localStorage.getItem("theme");
+      } catch {
+        explicit = null;
+      }
+      if (explicit) return; // user has manually toggled — don't override their choice
+      setDark(e.matches);
+      document.documentElement.classList.toggle("dark", e.matches);
+    }
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   function toggleTheme() {
@@ -255,16 +271,25 @@ export default function Home() {
   }, [groups]);
 
   const visibleFriends = useMemo(() => {
-    const list =
+    let list =
       activeGroup === "all"
         ? friends
         : activeGroup === "ungrouped"
         ? friends.filter((f) => !f.group_id)
         : friends.filter((f) => String(f.group_id) === String(activeGroup));
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      list = list.filter((f) => f.name.toLowerCase().includes(query));
+    }
     return [...list].sort(
       (a, b) => daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday)
     );
-  }, [friends, activeGroup]);
+  }, [friends, activeGroup, searchQuery]);
+
+  const birthdaysThisWeek = useMemo(
+    () => friends.filter((f) => daysUntilNextBirthday(f.birthday) <= 7).length,
+    [friends]
+  );
 
   function startEditFriend(friend) {
     setEditingFriendId(friend.id);
@@ -489,7 +514,9 @@ export default function Home() {
     <main className="relative mx-auto max-w-3xl px-4 py-10 sm:py-16">
       <button
         onClick={toggleTheme}
-        aria-label="Toggle dark mode"
+        aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+        aria-pressed={dark}
+        suppressHydrationWarning
         className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-neutral-600 shadow-softer ring-1 ring-neutral-200 transition hover:ring-neutral-300 sm:right-6 sm:top-6 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-neutral-700 dark:hover:ring-neutral-600"
       >
         {dark ? <IconSun className="h-5 w-5" /> : <IconMoon className="h-5 w-5" />}
@@ -506,10 +533,19 @@ export default function Home() {
           Keep everyone organized in groups, and get a Telegram nudge the day
           before so you never miss sending your regards.
         </p>
+        {friends.length > 0 && (
+          <p className="mt-3 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            🎂 {birthdaysThisWeek} birthday{birthdaysThisWeek === 1 ? "" : "s"} this week
+          </p>
+        )}
       </header>
 
       {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+        >
           {error}
         </div>
       )}
@@ -668,11 +704,12 @@ export default function Home() {
 
           <form onSubmit={handleGroupSubmit} className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              <label htmlFor="group-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 New group name
               </label>
               <input
                 required
+                id="group-name"
                 type="text"
                 value={groupForm.name}
                 onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
@@ -769,11 +806,12 @@ export default function Home() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <label htmlFor="friend-name" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Name
             </label>
             <input
               required
+              id="friend-name"
               type="text"
               value={friendForm.name}
               onChange={(e) => setFriendForm({ ...friendForm, name: e.target.value })}
@@ -791,6 +829,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setBirthdayMode("calendar")}
+                  aria-pressed={birthdayMode === "calendar"}
                   className={`rounded-md px-2.5 py-1 transition ${
                     birthdayMode === "calendar"
                       ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
@@ -802,6 +841,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setBirthdayMode("type")}
+                  aria-pressed={birthdayMode === "type"}
                   className={`rounded-md px-2.5 py-1 transition ${
                     birthdayMode === "type"
                       ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
@@ -882,10 +922,11 @@ export default function Home() {
           </div>
 
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <label htmlFor="friend-note" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Note (optional)
             </label>
             <input
+              id="friend-note"
               type="text"
               value={friendForm.note}
               onChange={(e) => setFriendForm({ ...friendForm, note: e.target.value })}
@@ -960,13 +1001,53 @@ export default function Home() {
 
       {/* Friends list */}
       <section>
-        <h2 className="mb-4 font-display text-lg font-semibold">Upcoming birthdays</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Upcoming birthdays</h2>
+          {friends.length > 0 && (
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name"
+              aria-label="Search friends by name"
+              className={`${inputClass} max-w-[12rem]`}
+            />
+          )}
+        </div>
 
         {loading && <p className="text-neutral-500 dark:text-neutral-400">Loading…</p>}
         {!loading && visibleFriends.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-neutral-300 bg-white/60 p-8 text-center text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400">
-            No one here yet.
-          </p>
+          <div className="rounded-2xl border border-dashed border-neutral-300 bg-white/60 p-8 text-center text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400">
+            {searchQuery.trim() ? (
+              <>
+                <p>No friends match "{searchQuery.trim()}".</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className={`mt-3 rounded-full px-4 py-1.5 text-sm font-medium transition ${neutralPillClass}`}
+                >
+                  Clear search
+                </button>
+              </>
+            ) : friends.length === 0 ? (
+              <p>No birthdays yet — add your first friend above.</p>
+            ) : (
+              <>
+                <p>
+                  No one in{" "}
+                  {activeGroup === "ungrouped" ? "Ungrouped" : groupsById.get(Number(activeGroup))?.name || "this group"}{" "}
+                  yet.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveGroup("all")}
+                  className={`mt-3 rounded-full px-4 py-1.5 text-sm font-medium transition ${neutralPillClass}`}
+                >
+                  Show all friends
+                </button>
+              </>
+            )}
+          </div>
         )}
 
         <ul className="space-y-3">
@@ -1002,6 +1083,12 @@ export default function Home() {
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
                     <span>{formatBirthday(friend.birthday)}</span>
                     {friend.note && <span className="truncate">· {friend.note}</span>}
+                    {friend.last_reminded_year === CURRENT_YEAR && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        <IconCheck className="h-3 w-3" />
+                        Reminded
+                      </span>
+                    )}
                     {activeGroup === "all" && <GroupBadge group={group} isDark={dark} />}
                   </div>
                 </div>

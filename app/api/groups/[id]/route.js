@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { normalizeColor } from "@/lib/colors";
+import { validateGroupPayload, parsePositiveIntParam } from "@/lib/validate";
 
 export async function PUT(request, { params }) {
   await ensureSchema();
-  const { name, color } = await request.json();
-
-  if (!name || !name.trim()) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  const id = parsePositiveIntParam(params.id);
+  if (id === null) {
+    return NextResponse.json({ error: "Invalid group id" }, { status: 400 });
   }
 
-  const safeColor = normalizeColor(color);
+  const body = await request.json().catch(() => null);
+  const result = validateGroupPayload(body);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  const safeColor = normalizeColor(body?.color);
 
   const { rows } = await sql`
     UPDATE groups
-    SET name = ${name.trim()}, color = ${safeColor}
-    WHERE id = ${params.id}
+    SET name = ${result.data.name}, color = ${safeColor}
+    WHERE id = ${id}
     RETURNING id, name, color;
   `;
 
@@ -28,7 +34,15 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   await ensureSchema();
+  const id = parsePositiveIntParam(params.id);
+  if (id === null) {
+    return NextResponse.json({ error: "Invalid group id" }, { status: 400 });
+  }
+
   // friends.group_id has ON DELETE SET NULL, so members just become ungrouped
-  await sql`DELETE FROM groups WHERE id = ${params.id};`;
+  const { rows } = await sql`DELETE FROM groups WHERE id = ${id} RETURNING id;`;
+  if (rows.length === 0) {
+    return NextResponse.json({ error: "not found" }, { status: 404 });
+  }
   return NextResponse.json({ ok: true });
 }

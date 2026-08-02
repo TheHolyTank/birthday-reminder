@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { normalizeColor } from "@/lib/colors";
+import { validateGroupPayload } from "@/lib/validate";
 
 export async function GET() {
   await ensureSchema();
@@ -12,18 +13,18 @@ export async function GET() {
 
 export async function POST(request) {
   await ensureSchema();
-  const { name, color } = await request.json();
-
-  if (!name || !name.trim()) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  const body = await request.json().catch(() => null);
+  const result = validateGroupPayload(body);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  const safeColor = normalizeColor(color);
+  const safeColor = normalizeColor(body?.color);
 
   try {
     const { rows } = await sql`
       INSERT INTO groups (name, color)
-      VALUES (${name.trim()}, ${safeColor})
+      VALUES (${result.data.name}, ${safeColor})
       RETURNING id, name, color;
     `;
     return NextResponse.json(rows[0], { status: 201 });
