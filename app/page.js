@@ -686,6 +686,11 @@ export default function Home() {
         <h1 className="mt-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 bg-clip-text font-display text-4xl font-bold text-transparent sm:text-5xl">
           Birthday Reminder
         </h1>
+        {me.email && (
+          <p className="mt-2 font-display text-lg font-semibold text-neutral-700 dark:text-neutral-200">
+            Hello, {me.name || me.email.split("@")[0]} 👋
+          </p>
+        )}
         <p className="mx-auto mt-3 max-w-md text-neutral-500 dark:text-neutral-400">
           Keep everyone organized in groups, and get a Telegram nudge the day
           before so you never miss sending your regards.
@@ -754,76 +759,194 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Telegram settings panel */}
+      {/* Account settings panel */}
       {showSettingsPanel && (
-        <div className="mb-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
-          <h2 className="mb-3 font-display text-base font-semibold">Telegram settings</h2>
-          <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-            Signed in as <span className="font-medium">{me.email}</span>. Message{" "}
-            <a
-              href="https://t.me/userinfobot"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              @userinfobot
-            </a>{" "}
-            on Telegram to get your numeric chat id, then paste it below to receive reminders.
-          </p>
-          <form onSubmit={handleSettingsSubmit} className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[10rem] flex-1">
-              <label htmlFor="telegram-chat-id" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                Telegram chat id
-              </label>
-              <input
-                id="telegram-chat-id"
-                type="text"
-                value={telegramChatIdInput}
-                onChange={(e) => {
-                  setTelegramChatIdInput(e.target.value);
-                  setSettingsSaved(false);
-                  setTestTelegramResult(null);
-                }}
-                className={inputClass}
-                placeholder="e.g. 987654321"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={savingSettings}
-              className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              {savingSettings ? "Saving…" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={handleTestTelegram}
-              disabled={testingTelegram || !telegramChatIdInput.trim()}
-              className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50 disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
-            >
-              {testingTelegram ? "Sending…" : "Send test message"}
-            </button>
-            {settingsSaved && (
-              <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                <IconCheck className="h-4 w-4" />
-                Saved
-              </span>
+        <div className="mb-8 space-y-6 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
+          <div>
+            <h2 className="mb-1 font-display text-base font-semibold">Profile</h2>
+            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Signed in as {me.email}</p>
+            <form onSubmit={handleNameSubmit} className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[10rem] flex-1">
+                <label htmlFor="profile-name" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Name
+                </label>
+                <input
+                  id="profile-name"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => {
+                    setNameInput(e.target.value);
+                    setNameSaved(false);
+                  }}
+                  className={inputClass}
+                  placeholder="e.g. Asaf"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={savingName}
+                className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              >
+                {savingName ? "Saving…" : "Save"}
+              </button>
+              {nameSaved && (
+                <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <IconCheck className="h-4 w-4" />
+                  Saved
+                </span>
+              )}
+            </form>
+          </div>
+
+          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+            <h2 className="mb-3 font-display text-base font-semibold">Password</h2>
+            <form onSubmit={handlePasswordSubmit} className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[10rem] flex-1">
+                <label htmlFor="current-password" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Current password
+                </label>
+                <input
+                  required
+                  id="current-password"
+                  type="password"
+                  value={currentPasswordInput}
+                  onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="min-w-[10rem] flex-1">
+                <label htmlFor="new-password" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  New password
+                </label>
+                <input
+                  required
+                  id="new-password"
+                  type="password"
+                  minLength={8}
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={savingPassword}
+                className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              >
+                {savingPassword ? "Saving…" : "Change password"}
+              </button>
+            </form>
+            {passwordResult && (
+              <p
+                role="alert"
+                aria-live="polite"
+                className={`mt-3 text-sm ${
+                  passwordResult.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {passwordResult.ok ? "✓ " : ""}
+                {passwordResult.message}
+              </p>
             )}
-          </form>
-          {testTelegramResult && (
-            <p
-              role="alert"
-              aria-live="polite"
-              className={`mt-3 text-sm ${
-                testTelegramResult.ok
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {testTelegramResult.ok ? "✓ " : ""}
-              {testTelegramResult.message}
+          </div>
+
+          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+            <h2 className="mb-1 font-display text-base font-semibold">Telegram</h2>
+            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">
+              {me.telegram_chat_id ? (
+                <>
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">✓ Connected</span> to chat id{" "}
+                  {me.telegram_chat_id}. Message{" "}
+                </>
+              ) : (
+                <>Not connected yet — reminders won't send until this is verified. Message </>
+              )}
+              <a
+                href="https://t.me/userinfobot"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                @userinfobot
+              </a>{" "}
+              on Telegram to get your numeric chat id.
             </p>
-          )}
+
+            {!codeSent ? (
+              <form onSubmit={handleSendCode} className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[10rem] flex-1">
+                  <label htmlFor="telegram-chat-id" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                    Telegram chat id
+                  </label>
+                  <input
+                    id="telegram-chat-id"
+                    type="text"
+                    value={telegramChatIdInput}
+                    onChange={(e) => {
+                      setTelegramChatIdInput(e.target.value);
+                      setTelegramResult(null);
+                    }}
+                    className={inputClass}
+                    placeholder="e.g. 987654321"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={sendingCode || !telegramChatIdInput.trim()}
+                  className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                >
+                  {sendingCode ? "Sending…" : "Send verification code"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmCode} className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[8rem]">
+                  <label htmlFor="verification-code" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                    6-digit code
+                  </label>
+                  <input
+                    required
+                    autoFocus
+                    id="verification-code"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d{6}"
+                    maxLength={6}
+                    value={verificationCodeInput}
+                    onChange={(e) => setVerificationCodeInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className={inputClass}
+                    placeholder="123456"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={confirmingCode || verificationCodeInput.length !== 6}
+                  className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                >
+                  {confirmingCode ? "Confirming…" : "Confirm"}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelTelegramVerification}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-medium transition ${neutralPillClass}`}
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
+            {telegramResult && (
+              <p
+                role="alert"
+                aria-live="polite"
+                className={`mt-3 text-sm ${
+                  telegramResult.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {telegramResult.ok ? "✓ " : ""}
+                {telegramResult.message}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
