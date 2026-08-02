@@ -7,3 +7,8 @@ body {
     radial-gradient(circle at 85% 0%, #eef2ff 0%, transparent 40%);
   background-attachment: fixed;
 }
+
+html.dark body {
+  background-color: #000;
+  background-image: none;
+}
