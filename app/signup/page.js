@@ -54,8 +54,6 @@ function AccountStep({ onCreated }) {
             autoFocus
             id="signup-username"
             type="text"
-            minLength={3}
-            maxLength={32}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className={inputClass}
