@@ -41,6 +41,15 @@ function formatBirthday(birthday) {
   return bday.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
 }
 
+// Renders a UTC hour (0-23, what's actually stored) as a label in the
+// viewer's own local time, so the picker reads naturally without needing a
+// separate stored timezone.
+function utcHourToLocalLabel(hour) {
+  const d = new Date();
+  d.setUTCHours(hour, 0, 0, 0);
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
 function initials(name) {
   return name
     .trim()
@@ -227,7 +236,14 @@ export default function Home() {
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [me, setMe] = useState({ username: "", photo_url: null, telegram_chat_id: null, is_admin: false });
+  const [me, setMe] = useState({
+    username: "",
+    photo_url: null,
+    telegram_chat_id: null,
+    is_admin: false,
+    reminder_offset_days: 1,
+    reminder_hour_utc: 17,
+  });
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
   const [usernameInput, setUsernameInput] = useState("");
@@ -250,6 +266,11 @@ export default function Home() {
   const [confirmingCode, setConfirmingCode] = useState(false);
   const [telegramResult, setTelegramResult] = useState(null); // { ok, message } | null
   const [botUsername, setBotUsername] = useState(null);
+
+  const [reminderOffsetInput, setReminderOffsetInput] = useState(1);
+  const [reminderHourInput, setReminderHourInput] = useState(17);
+  const [savingReminderSettings, setSavingReminderSettings] = useState(false);
+  const [reminderSettingsResult, setReminderSettingsResult] = useState(null); // { ok, message } | null
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -304,6 +325,8 @@ export default function Home() {
       setMe(meData);
       setUsernameInput(meData.username || "");
       setTelegramChatIdInput(meData.telegram_chat_id || "");
+      setReminderOffsetInput(meData.reminder_offset_days ?? 1);
+      setReminderHourInput(meData.reminder_hour_utc ?? 17);
       apiFetch("/api/bot-info")
         .then((res) => (res.ok ? res.json() : null))
         .then((body) => body?.username && setBotUsername(body.username))
@@ -718,6 +741,27 @@ export default function Home() {
     setTelegramResult(null);
   }
 
+  async function handleReminderSettingsSubmit(e) {
+    e.preventDefault();
+    setReminderSettingsResult(null);
+    setSavingReminderSettings(true);
+    try {
+      const res = await apiFetch("/api/me/reminder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ offsetDays: Number(reminderOffsetInput), hourUtc: Number(reminderHourInput) }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to save reminder settings");
+      setMe(body);
+      setReminderSettingsResult({ ok: true, message: "Saved." });
+    } catch (err) {
+      setReminderSettingsResult({ ok: false, message: err.message });
+    } finally {
+      setSavingReminderSettings(false);
+    }
+  }
+
   const inputClass =
     "w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/20";
 
@@ -1110,6 +1154,91 @@ export default function Home() {
               >
                 {telegramResult.ok ? "✓ " : ""}
                 {telegramResult.message}
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+            <h2 className="mb-1 font-display text-base font-semibold">Reminder timing</h2>
+            <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">
+              When to send the Telegram reminder for each friend's birthday.
+            </p>
+            <form onSubmit={handleReminderSettingsSubmit} className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">Send</label>
+                <div className="flex rounded-lg bg-neutral-100 p-0.5 text-xs font-medium dark:bg-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderOffsetInput(1);
+                      setReminderSettingsResult(null);
+                    }}
+                    aria-pressed={Number(reminderOffsetInput) === 1}
+                    className={`rounded-md px-2.5 py-1.5 transition ${
+                      Number(reminderOffsetInput) === 1
+                        ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
+                        : "text-neutral-500 dark:text-neutral-400"
+                    }`}
+                  >
+                    Day before
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderOffsetInput(0);
+                      setReminderSettingsResult(null);
+                    }}
+                    aria-pressed={Number(reminderOffsetInput) === 0}
+                    className={`rounded-md px-2.5 py-1.5 transition ${
+                      Number(reminderOffsetInput) === 0
+                        ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
+                        : "text-neutral-500 dark:text-neutral-400"
+                    }`}
+                  >
+                    Day of
+                  </button>
+                </div>
+              </div>
+              <div className="min-w-[8rem]">
+                <label htmlFor="reminder-hour" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  At (your local time)
+                </label>
+                <select
+                  id="reminder-hour"
+                  value={reminderHourInput}
+                  onChange={(e) => {
+                    setReminderHourInput(e.target.value);
+                    setReminderSettingsResult(null);
+                  }}
+                  className={inputClass}
+                >
+                  {Array.from({ length: 24 }, (_, h) => h).map((h) => (
+                    <option key={h} value={h}>
+                      {utcHourToLocalLabel(h)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={savingReminderSettings}
+                className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+              >
+                {savingReminderSettings ? "Saving…" : "Save"}
+              </button>
+            </form>
+            {reminderSettingsResult && (
+              <p
+                role="alert"
+                aria-live="polite"
+                className={`mt-3 text-sm ${
+                  reminderSettingsResult.ok
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {reminderSettingsResult.ok ? "✓ " : ""}
+                {reminderSettingsResult.message}
               </p>
             )}
           </div>
