@@ -83,9 +83,10 @@ per-user reminder time (yet).
      to be someone else's). Note: this is only enforced during the sign-up
      flow itself — an account that's already created and logged in isn't
      re-blocked from the app if Telegram is ever disconnected later.
-2. Open **⚙ Settings** (next to "Log out") any time afterward to change your
-   password or reconnect/change your Telegram chat id. Your username is shown
-   as "Hello, {username}" on the main page.
+2. Open **⚙ Settings** (next to "Log out") any time afterward to set a
+   display name (shown as "Hello, {name}" on the main page instead of your
+   username, once set), change your password, or reconnect/change your
+   Telegram chat id.
 3. Add friends with their name, birthday, and an optional note. The night
    before each birthday, you'll get a Telegram message like:
 
@@ -97,7 +98,7 @@ from yours.
 
 **Admin:** the very first account ever created (yours, if you're the
 deployer) is automatically the admin. A **🛡 Admin** link appears next to
-"Log out" for that account only, showing every signed-up user (username,
+"Log out" for that account only, showing every signed-up user (name/username,
 Telegram-connected status, join date) with the ability to reset anyone's
 password or delete their account entirely (including all their friends and
 groups). There's currently no way to promote a second account to admin.
