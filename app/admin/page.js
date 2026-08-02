@@ -19,7 +19,7 @@ async function apiFetch(url, options) {
 
 export default function AdminPage() {
   const [users, setUsers] = useState([]);
-  const [myEmail, setMyEmail] = useState("");
+  const [myUsername, setMyUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +42,7 @@ export default function AdminPage() {
       if (!usersRes.ok || !meRes.ok) throw new Error("Failed to load users");
       setUsers(await usersRes.json());
       const me = await meRes.json();
-      setMyEmail(me.email);
+      setMyUsername(me.username);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -116,7 +116,7 @@ export default function AdminPage() {
       {!loading && !forbidden && (
         <ul className="space-y-3">
           {users.map((u) => {
-            const isMe = u.email === myEmail;
+            const isMe = u.username === myUsername;
             return (
               <li
                 key={u.id}
@@ -125,7 +125,7 @@ export default function AdminPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">
-                      {u.name || u.email}
+                      {u.username}
                       {isMe && <span className="ml-2 text-xs text-neutral-400 dark:text-neutral-500">(you)</span>}
                       {u.is_admin && (
                         <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
@@ -134,7 +134,7 @@ export default function AdminPage() {
                       )}
                     </p>
                     <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-                      {u.email} · Joined {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} ·{" "}
+                      Joined {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} ·{" "}
                       {u.telegram_chat_id ? (
                         <span className="text-emerald-600 dark:text-emerald-400">Telegram connected</span>
                       ) : (
@@ -187,7 +187,7 @@ export default function AdminPage() {
                   <form onSubmit={(e) => handleResetPassword(e, u.id)} className="mt-3 flex flex-wrap items-end gap-2">
                     <div className="min-w-[10rem] flex-1">
                       <label htmlFor={`new-password-${u.id}`} className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                        New password for {u.email}
+                        New password for {u.username}
                       </label>
                       <input
                         required

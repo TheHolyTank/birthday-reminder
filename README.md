@@ -9,7 +9,7 @@ birthdays, and every day it checks whose birthday is tomorrow and sends
 - Daily check: Vercel Cron, once a day
 - Message send: Telegram Bot API (free, official, reliable) — one shared bot,
   each account supplies its own chat id
-- Accounts: email + password, sign-up gated by a shared invite code
+- Accounts: username + password, sign-up gated by a shared invite code
 
 ## 1. Create a Telegram bot
 
@@ -70,7 +70,7 @@ per-user reminder time (yet).
 ## 5. Use it
 
 1. Visit your Vercel URL and go to **Sign up**. It's two steps:
-   - **Step 1**: email, password, confirm password, and the `SITE_PASSWORD`
+   - **Step 1**: username, password, confirm password, and the `SITE_PASSWORD`
      invite code from step 3. **If you're upgrading an existing single-user
      deployment**, the very first account ever created automatically inherits
      all previously-added friends/groups — nothing is lost, you're just
@@ -84,8 +84,8 @@ per-user reminder time (yet).
      flow itself — an account that's already created and logged in isn't
      re-blocked from the app if Telegram is ever disconnected later.
 2. Open **⚙ Settings** (next to "Log out") any time afterward to change your
-   display name (shown as "Hello, {name}" on the main page), change your
-   password, or reconnect/change your Telegram chat id.
+   password or reconnect/change your Telegram chat id. Your username is shown
+   as "Hello, {username}" on the main page.
 3. Add friends with their name, birthday, and an optional note. The night
    before each birthday, you'll get a Telegram message like:
 
@@ -97,7 +97,7 @@ from yours.
 
 **Admin:** the very first account ever created (yours, if you're the
 deployer) is automatically the admin. A **🛡 Admin** link appears next to
-"Log out" for that account only, showing every signed-up user (email, name,
+"Log out" for that account only, showing every signed-up user (username,
 Telegram-connected status, join date) with the ability to reset anyone's
 password or delete their account entirely (including all their friends and
 groups). There's currently no way to promote a second account to admin.
