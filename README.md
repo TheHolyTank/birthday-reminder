@@ -69,10 +69,16 @@ about 5 minutes:
 1. Sign up free at [cron-job.org](https://cron-job.org) (or any similar free
    cron-ping service).
 2. Create a new cron job:
-   - **URL**: `https://<your-project>.vercel.app/api/cron/check-birthdays`
+   - **URL**: `https://<your-project>.vercel.app/api/cron/check-birthdays?secret=<your CRON_SECRET value>`
+     (the secret goes right in the URL — no need to hunt for a custom-headers
+     section. If your chosen service *does* support custom headers and
+     you'd rather not put the secret in a URL that might get logged
+     somewhere, you can instead use the URL without `?secret=...` and add a
+     header `Authorization: Bearer <your CRON_SECRET value>`. Either works.)
    - **Schedule**: every hour, on the hour.
    - **Method**: GET
-   - **Header**: `Authorization: Bearer <your CRON_SECRET value>`
+   - Leave any "HTTP authentication" (username/password) option **off** —
+     that's a different, unrelated mechanism (HTTP Basic Auth).
 3. Save and enable it.
 
 With that running hourly, the endpoint is checked every hour and only

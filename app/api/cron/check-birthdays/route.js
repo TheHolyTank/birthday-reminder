@@ -2,13 +2,25 @@ import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { sendTelegramReminder } from "@/lib/telegram";
 import { toISODate } from "@/lib/date";
+import { timingSafeEqualStr } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+// Accepts the secret either as a Bearer header (what Vercel's own cron
+// sends) or as a `?secret=` query param — the latter exists so free
+// external cron-ping services whose UI doesn't expose custom headers can
+// still authenticate, just by pasting the secret into the URL.
 function isAuthorized(request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false; // fail closed: an unset secret must never mean "anyone may trigger this"
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+
+  const authHeader = request.headers.get("authorization") || "";
+  if (timingSafeEqualStr(authHeader, `Bearer ${secret}`)) return true;
+
+  const querySecret = request.nextUrl.searchParams.get("secret") || "";
+  if (querySecret && timingSafeEqualStr(querySecret, secret)) return true;
+
+  return false;
 }
 
 export async function GET(request) {
