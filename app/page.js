@@ -589,12 +589,20 @@ export default function Home() {
 
   return (
     <main className="relative mx-auto max-w-3xl px-4 py-10 sm:py-16">
-      <button
-        onClick={handleLogout}
-        className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 shadow-softer ring-1 ring-neutral-200 transition hover:text-neutral-700 hover:ring-neutral-300 sm:left-6 sm:top-6 dark:bg-neutral-900 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:text-neutral-200 dark:hover:ring-neutral-600"
-      >
-        Log out
-      </button>
+      <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-6 sm:top-6">
+        <button
+          onClick={handleLogout}
+          className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 shadow-softer ring-1 ring-neutral-200 transition hover:text-neutral-700 hover:ring-neutral-300 dark:bg-neutral-900 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:text-neutral-200 dark:hover:ring-neutral-600"
+        >
+          Log out
+        </button>
+        <button
+          onClick={() => setShowSettingsPanel((v) => !v)}
+          className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-indigo-600 shadow-softer ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+        >
+          {showSettingsPanel ? "Close settings" : "⚙ Settings"}
+        </button>
+      </div>
       <button
         onClick={toggleTheme}
         aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
@@ -674,15 +682,9 @@ export default function Home() {
         </button>
         <button
           onClick={() => setShowGroupPanel((v) => !v)}
-          className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
-        >
-          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
-        </button>
-        <button
-          onClick={() => setShowSettingsPanel((v) => !v)}
           className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
         >
-          {showSettingsPanel ? "Close settings" : "⚙ Telegram settings"}
+          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
         </button>
       </div>
 
