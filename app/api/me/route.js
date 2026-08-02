@@ -9,7 +9,7 @@ export async function GET(request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   await ensureSchema();
-  const { rows } = await sql`SELECT email, name, telegram_chat_id FROM users WHERE id = ${userId};`;
+  const { rows } = await sql`SELECT email, name, telegram_chat_id, is_admin FROM users WHERE id = ${userId};`;
   if (rows.length === 0) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
@@ -32,7 +32,7 @@ export async function PUT(request) {
   const { rows } = await sql`
     UPDATE users SET name = ${check.value}
     WHERE id = ${userId}
-    RETURNING email, name, telegram_chat_id;
+    RETURNING email, name, telegram_chat_id, is_admin;
   `;
   return NextResponse.json(rows[0]);
 }

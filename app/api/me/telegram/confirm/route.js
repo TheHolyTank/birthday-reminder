@@ -39,7 +39,7 @@ export async function POST(request) {
         telegram_verify_code = NULL,
         telegram_verify_expires_at = NULL
     WHERE id = ${userId}
-    RETURNING email, name, telegram_chat_id;
+    RETURNING email, name, telegram_chat_id, is_admin;
   `;
 
   return NextResponse.json(updated[0]);
