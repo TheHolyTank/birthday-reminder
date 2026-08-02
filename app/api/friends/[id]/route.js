@@ -3,7 +3,7 @@ import { sql, ensureSchema } from "@/lib/db";
 
 export async function PUT(request, { params }) {
   await ensureSchema();
-  const { name, birthday, note, groupId } = await request.json();
+  const { name, birthday, note, groupId, photoUrl } = await request.json();
 
   if (!name || !birthday) {
     return NextResponse.json(
@@ -14,9 +14,10 @@ export async function PUT(request, { params }) {
 
   const { rows } = await sql`
     UPDATE friends
-    SET name = ${name}, birthday = ${birthday}, note = ${note || null}, group_id = ${groupId || null}
+    SET name = ${name}, birthday = ${birthday}, note = ${note || null},
+        group_id = ${groupId || null}, photo_url = ${photoUrl || null}
     WHERE id = ${params.id}
-    RETURNING id, name, birthday, note, group_id;
+    RETURNING id, name, birthday, note, group_id, photo_url;
   `;
 
   if (rows.length === 0) {
