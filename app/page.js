@@ -927,14 +927,30 @@ export default function Home() {
         </div>
       )}
 
-      <GroupFilterPills
-        groups={groups}
-        activeGroup={activeGroup}
-        setActiveGroup={setActiveGroup}
-        dark={dark}
-        neutralPillClass={neutralPillClass}
-        activePillClass={activePillClass}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <GroupFilterPills
+          groups={groups}
+          activeGroup={activeGroup}
+          setActiveGroup={setActiveGroup}
+          dark={dark}
+          neutralPillClass={neutralPillClass}
+          activePillClass={activePillClass}
+        />
+        <div className="mb-6 flex shrink-0 gap-2">
+          <button
+            onClick={() => setShowGroupPanel((v) => !v)}
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            {showGroupPanel ? "Close groups" : "＋ Manage groups"}
+          </button>
+          <button
+            onClick={() => setShowSettingsPanel((v) => !v)}
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            {showSettingsPanel ? "Close settings" : "⚙ Settings"}
+          </button>
+        </div>
+      </div>
 
       {/* Account settings panel */}
       {showSettingsPanel && (
