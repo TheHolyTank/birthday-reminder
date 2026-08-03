@@ -1289,10 +1289,12 @@ export default function Home() {
         </div>
       )}
 
-      {/* Add / edit friend */}
+      {/* Friends list + add-friend sidebar */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <aside className="order-2 lg:order-1 lg:w-96 lg:shrink-0">
       <form
         onSubmit={handleFriendSubmit}
-        className="mb-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
+        className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
       >
         <h2 className="mb-4 font-display text-lg font-semibold">
           {editingFriendId ? "Edit friend" : "Add a friend"}
@@ -1359,7 +1361,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4">
           <div>
             <label htmlFor="friend-name" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Name
@@ -1479,7 +1481,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="sm:col-span-2">
+          <div>
             <label htmlFor="friend-note" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Note (optional)
             </label>
@@ -1493,7 +1495,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Group
             </label>
@@ -1556,13 +1558,12 @@ export default function Home() {
           )}
         </div>
       </form>
+      </aside>
 
-      {/* Friends list + sidebar filters */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <aside className="space-y-4 lg:w-56 lg:shrink-0">
+        <section className="order-1 min-w-0 flex-1 lg:order-2">
           {friends.length > 0 && (
-            <>
-              <div>
+            <div className="mb-4 flex flex-row items-end gap-3">
+              <div className="flex-1">
                 <label htmlFor="friend-search" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
                   Search
                 </label>
@@ -1575,7 +1576,7 @@ export default function Home() {
                   className={`${inputClass} w-full`}
                 />
               </div>
-              <div>
+              <div className="w-40 shrink-0">
                 <label htmlFor="friend-sort" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
                   Sort by
                 </label>
@@ -1591,28 +1592,9 @@ export default function Home() {
                   <option value="recent">Recently added</option>
                 </select>
               </div>
-            </>
+            </div>
           )}
-          <div>
-            <p className="mb-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">Group</p>
-            <GroupFilterPills
-              groups={groups}
-              activeGroup={activeGroup}
-              setActiveGroup={setActiveGroup}
-              dark={dark}
-              neutralPillClass={neutralPillClass}
-              activePillClass={activePillClass}
-            />
-          </div>
-          <button
-            onClick={() => setShowGroupPanel((v) => !v)}
-            className="w-full rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
-          >
-            {showGroupPanel ? "Close groups" : "＋ Manage groups"}
-          </button>
-        </aside>
 
-        <section className="min-w-0 flex-1">
           <h2 className="mb-4 font-display text-lg font-semibold">Upcoming birthdays</h2>
 
           {loading && <p className="text-neutral-500 dark:text-neutral-400">Loading…</p>}
@@ -1750,6 +1732,24 @@ export default function Home() {
           })}
           </ul>
         </section>
+      </div>
+
+      {/* Group filter — bottom bar */}
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+        <GroupFilterPills
+          groups={groups}
+          activeGroup={activeGroup}
+          setActiveGroup={setActiveGroup}
+          dark={dark}
+          neutralPillClass={neutralPillClass}
+          activePillClass={activePillClass}
+        />
+        <button
+          onClick={() => setShowGroupPanel((v) => !v)}
+          className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+        >
+          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
+        </button>
       </div>
 
       {/* Manage groups panel */}
