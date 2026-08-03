@@ -1236,7 +1236,7 @@ export default function Home() {
               When to send the Telegram reminder for each friend's birthday.
             </p>
             <form onSubmit={handleReminderSettingsSubmit} className="flex flex-wrap items-end gap-3">
-              <label className="flex w-full items-start gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+              <label className="flex w-full cursor-pointer items-start gap-3 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-pink-50 p-3 transition hover:border-indigo-200 dark:border-indigo-500/20 dark:from-indigo-500/10 dark:via-neutral-900 dark:to-pink-500/10 dark:hover:border-indigo-500/40">
                 <input
                   type="checkbox"
                   checked={suggestMessageInput}
@@ -1247,7 +1247,9 @@ export default function Home() {
                   className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-800"
                 />
                 <span>
-                  ✨ Suggest a message to send
+                  <span className="bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-sm font-semibold text-transparent">
+                    ✨ Suggest a message to send
+                  </span>
                   <span className="block text-xs font-normal text-neutral-500 dark:text-neutral-400">
                     Ask AI for a short birthday message you could send, included right in the reminder.
                   </span>
