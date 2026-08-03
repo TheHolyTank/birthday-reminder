@@ -1237,15 +1237,19 @@ export default function Home() {
             </p>
             <form onSubmit={handleReminderSettingsSubmit} className="flex flex-wrap items-end gap-3">
               <label className="flex w-full cursor-pointer items-start gap-3 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-pink-50 p-3 transition hover:border-indigo-200 dark:border-indigo-500/20 dark:from-indigo-500/10 dark:via-neutral-900 dark:to-pink-500/10 dark:hover:border-indigo-500/40">
-                <input
-                  type="checkbox"
-                  checked={suggestMessageInput}
-                  onChange={(e) => {
-                    setSuggestMessageInput(e.target.checked);
-                    setReminderSettingsResult(null);
-                  }}
-                  className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-800"
-                />
+                <span className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center">
+                  <input
+                    type="checkbox"
+                    checked={suggestMessageInput}
+                    onChange={(e) => {
+                      setSuggestMessageInput(e.target.checked);
+                      setReminderSettingsResult(null);
+                    }}
+                    className="peer sr-only"
+                  />
+                  <span className="pointer-events-none absolute inset-0 rounded-full bg-neutral-300 transition-colors peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-pink-600 peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-400 peer-focus-visible:ring-offset-2 dark:bg-neutral-600" />
+                  <span className="pointer-events-none absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+                </span>
                 <span>
                   <span className="bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-sm font-semibold text-transparent">
                     ✨ Suggest a message to send
