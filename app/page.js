@@ -178,6 +178,50 @@ function GroupBadge({ group, isDark }) {
   );
 }
 
+function GroupFilterPills({ groups, activeGroup, setActiveGroup, dark, neutralPillClass, activePillClass }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => setActiveGroup("all")}
+        className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+          activeGroup === "all" ? activePillClass : neutralPillClass
+        }`}
+      >
+        All
+      </button>
+      {groups.map((g) => {
+        const isActive = activeGroup === String(g.id);
+        const s = groupStyle(g.color, dark);
+        return (
+          <button
+            key={g.id}
+            onClick={() => setActiveGroup(String(g.id))}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              isActive ? "" : neutralPillClass
+            }`}
+            style={
+              isActive
+                ? { backgroundColor: s.badge.backgroundColor, color: s.badge.color, boxShadow: `0 0 0 2px ${s.hex}` }
+                : undefined
+            }
+          >
+            <GroupDot color={g.color} />
+            {g.name}
+          </button>
+        );
+      })}
+      <button
+        onClick={() => setActiveGroup("ungrouped")}
+        className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+          activeGroup === "ungrouped" ? activePillClass : neutralPillClass
+        }`}
+      >
+        Ungrouped
+      </button>
+    </div>
+  );
+}
+
 function ColorGrid({ value, onChange }) {
   return (
     <div className="grid w-max grid-cols-8 gap-2">
@@ -883,6 +927,17 @@ export default function Home() {
         </div>
       )}
 
+      {groups.length > 0 && (
+        <GroupFilterPills
+          groups={groups}
+          activeGroup={activeGroup}
+          setActiveGroup={setActiveGroup}
+          dark={dark}
+          neutralPillClass={neutralPillClass}
+          activePillClass={activePillClass}
+        />
+      )}
+
       {/* Account settings panel */}
       {showSettingsPanel && (
         <div className="mb-8 space-y-6 rounded-2xl border border-neutral-200 bg-white p-5 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
@@ -1509,12 +1564,12 @@ export default function Home() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">Upcoming birthdays</h2>
           {friends.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value)}
                 aria-label="Sort friends"
-                className={`${inputClass} w-auto`}
+                className={`${inputClass} w-auto shrink-0`}
               >
                 <option value="birthday">Sort: Soonest birthday</option>
                 <option value="name">Sort: Name (A–Z)</option>
@@ -1527,7 +1582,7 @@ export default function Home() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name"
                 aria-label="Search friends by name"
-                className={`${inputClass} max-w-[12rem]`}
+                className={`${inputClass} min-w-0 max-w-[12rem]`}
               />
             </div>
           )}
