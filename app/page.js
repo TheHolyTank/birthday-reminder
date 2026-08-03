@@ -1291,7 +1291,7 @@ export default function Home() {
 
       {/* Friends list + add-friend sidebar */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <aside className="order-2 lg:order-1 lg:w-96 lg:shrink-0">
+      <aside className="order-2 lg:sticky lg:top-6 lg:order-1 lg:w-96 lg:max-h-[calc(100vh-3rem)] lg:shrink-0 lg:self-start lg:overflow-y-auto">
       <form
         onSubmit={handleFriendSubmit}
         className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
