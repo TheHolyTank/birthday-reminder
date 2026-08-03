@@ -15,16 +15,17 @@ export async function PUT(request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
-  const { offsetDays, localHour, utcOffsetMinutes } = result.data;
+  const { offsetDays, localHour, utcOffsetMinutes, suggestMessage } = result.data;
 
   const { rows } = await sql`
     UPDATE users
     SET reminder_offset_days = ${offsetDays},
         reminder_local_hour = ${localHour},
-        reminder_utc_offset_minutes = ${utcOffsetMinutes}
+        reminder_utc_offset_minutes = ${utcOffsetMinutes},
+        suggest_message = ${suggestMessage}
     WHERE id = ${userId}
     RETURNING username, photo_url, telegram_chat_id, is_admin,
-              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
+              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes, suggest_message;
   `;
   return NextResponse.json(rows[0]);
 }

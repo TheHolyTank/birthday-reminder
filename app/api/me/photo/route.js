@@ -16,7 +16,7 @@ export async function PUT(request) {
     UPDATE users SET photo_url = ${photoUrl}
     WHERE id = ${userId}
     RETURNING username, photo_url, telegram_chat_id, is_admin,
-              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
+              reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes, suggest_message;
   `;
   return NextResponse.json(rows[0]);
 }

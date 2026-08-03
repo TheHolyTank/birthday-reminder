@@ -335,6 +335,7 @@ export default function Home() {
 
   const [reminderOffsetInput, setReminderOffsetInput] = useState(1);
   const [reminderHourInput, setReminderHourInput] = useState(17);
+  const [suggestMessageInput, setSuggestMessageInput] = useState(false);
   const [savingReminderSettings, setSavingReminderSettings] = useState(false);
   const [reminderSettingsResult, setReminderSettingsResult] = useState(null); // { ok, message } | null
 
@@ -393,6 +394,7 @@ export default function Home() {
       setTelegramChatIdInput(meData.telegram_chat_id || "");
       setReminderOffsetInput(meData.reminder_offset_days ?? 1);
       setReminderHourInput(meData.reminder_local_hour ?? 20);
+      setSuggestMessageInput(Boolean(meData.suggest_message));
       apiFetch("/api/bot-info")
         .then((res) => (res.ok ? res.json() : null))
         .then((body) => body?.username && setBotUsername(body.username))
@@ -838,6 +840,7 @@ export default function Home() {
           offsetDays: Number(reminderOffsetInput),
           localHour: Number(reminderHourInput),
           utcOffsetMinutes: new Date().getTimezoneOffset(),
+          suggestMessage: suggestMessageInput,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -1233,6 +1236,23 @@ export default function Home() {
               When to send the Telegram reminder for each friend's birthday.
             </p>
             <form onSubmit={handleReminderSettingsSubmit} className="flex flex-wrap items-end gap-3">
+              <label className="flex w-full items-start gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+                <input
+                  type="checkbox"
+                  checked={suggestMessageInput}
+                  onChange={(e) => {
+                    setSuggestMessageInput(e.target.checked);
+                    setReminderSettingsResult(null);
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 dark:border-neutral-600 dark:bg-neutral-800"
+                />
+                <span>
+                  ✨ Suggest a message to send
+                  <span className="block text-xs font-normal text-neutral-500 dark:text-neutral-400">
+                    Ask AI for a short birthday message you could send, included right in the reminder.
+                  </span>
+                </span>
+              </label>
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">Send</label>
                 <div className="flex rounded-lg bg-neutral-100 p-0.5 text-xs font-medium dark:bg-neutral-800">

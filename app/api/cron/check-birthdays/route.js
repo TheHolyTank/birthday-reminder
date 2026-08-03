@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { sendTelegramReminder } from "@/lib/telegram";
+import { generateRegardsSuggestion } from "@/lib/gemini";
 import { timingSafeEqualStr } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,7 @@ export async function GET(request) {
         u.id AS user_id,
         u.telegram_chat_id,
         u.reminder_offset_days,
+        u.suggest_message,
         (
           ((now() AT TIME ZONE 'UTC') - (u.reminder_utc_offset_minutes * interval '1 minute'))::date
           + u.reminder_offset_days
@@ -54,7 +56,7 @@ export async function GET(request) {
     )
     SELECT
       f.id, f.name, f.birthday, f.note,
-      t.telegram_chat_id, t.reminder_offset_days,
+      t.telegram_chat_id, t.reminder_offset_days, t.suggest_message,
       EXTRACT(YEAR FROM t.target_date)::int AS target_year,
       EXTRACT(MONTH FROM t.target_date)::int AS target_month,
       EXTRACT(DAY FROM t.target_date)::int AS target_day
@@ -76,9 +78,16 @@ export async function GET(request) {
       Date.UTC(friend.target_year, friend.target_month - 1, friend.target_day)
     ).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
     const noteSuffix = friend.note ? ` (${friend.note})` : "";
-    const message =
+    let message =
       `🎂 Reminder: it's ${friend.name}'s${noteSuffix} birthday ${when}, ` +
       `${dateLabel}! Don't forget to send your regards.`;
+
+    if (friend.suggest_message) {
+      const suggestion = await generateRegardsSuggestion({ name: friend.name, note: friend.note });
+      if (suggestion) {
+        message += `\n\n💬 Suggested message: "${suggestion}"`;
+      }
+    }
 
     try {
       await sendTelegramReminder(friend.telegram_chat_id, message);

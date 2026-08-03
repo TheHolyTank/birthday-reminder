@@ -11,7 +11,7 @@ export async function GET(request) {
   await ensureSchema();
   const { rows } = await sql`
     SELECT username, photo_url, telegram_chat_id, is_admin,
-           reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes
+           reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes, suggest_message
     FROM users WHERE id = ${userId};
   `;
   if (rows.length === 0) {
@@ -41,7 +41,7 @@ export async function PUT(request) {
       UPDATE users SET username = ${username}
       WHERE id = ${userId}
       RETURNING username, photo_url, telegram_chat_id, is_admin,
-                reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes;
+                reminder_offset_days, reminder_local_hour, reminder_utc_offset_minutes, suggest_message;
     `;
     return NextResponse.json(rows[0]);
   } catch (err) {

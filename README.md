@@ -48,6 +48,12 @@ Then create a new (private, if you like) repo on GitHub and push this folder to 
      private app you control access to. **Required**.
    - `AUTH_SECRET` — any random string (e.g. `openssl rand -base64 32`), signs
      session cookies. **Required**. Rotating it logs everyone out everywhere.
+   - `GEMINI_API_KEY` — **optional**. Powers the opt-in "✨ Suggest a message
+     to send" reminder setting (see step 4). Get a free key at
+     [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — no
+     credit card needed for the free tier. Leave unset if you don't want that
+     feature; reminders work fine without it, they just won't include a
+     suggested message even for accounts that turn the setting on.
 5. Redeploy.
 
 Your site will be live at `https://<your-project>.vercel.app`.
@@ -58,6 +64,12 @@ Each account chooses its own reminder timing in **⚙ Settings**: whether to
 be notified the **day before** or the **day of** each friend's birthday, and
 at what hour — shown and picked in *your own local time*. This is
 per-account, not a single global setting.
+
+The same panel has an opt-in **✨ Suggest a message to send** checkbox — off
+by default, so it only happens if you turn it on. When enabled (and
+`GEMINI_API_KEY` is set, see step 3), each reminder asks Gemini for a short,
+ready-to-send birthday message for that friend and includes it right in the
+Telegram text.
 
 Under the hood this stores your chosen hour **and** your current UTC offset
 (captured automatically from your browser each time you save), and both are
