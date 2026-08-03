@@ -178,7 +178,16 @@ function GroupBadge({ group, isDark }) {
   );
 }
 
-function GroupFilterPills({ groups, activeGroup, setActiveGroup, dark, neutralPillClass, activePillClass }) {
+function GroupFilterPills({
+  groups,
+  activeGroup,
+  setActiveGroup,
+  dark,
+  neutralPillClass,
+  activePillClass,
+  thisWeekOnly,
+  setThisWeekOnly,
+}) {
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2">
       <button
@@ -217,6 +226,16 @@ function GroupFilterPills({ groups, activeGroup, setActiveGroup, dark, neutralPi
         }`}
       >
         Ungrouped
+      </button>
+      <span className="mx-1 h-4 w-px bg-neutral-200 dark:bg-neutral-700" aria-hidden="true" />
+      <button
+        onClick={() => setThisWeekOnly((v) => !v)}
+        aria-pressed={thisWeekOnly}
+        className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+          thisWeekOnly ? activePillClass : neutralPillClass
+        }`}
+      >
+        🎂 This week
       </button>
     </div>
   );
@@ -270,6 +289,7 @@ export default function Home() {
   const [calendarYear, setCalendarYear] = useState("");
 
   const [activeGroup, setActiveGroup] = useState("all");
+  const [thisWeekOnly, setThisWeekOnly] = useState(false);
   const [showGroupPanel, setShowGroupPanel] = useState(false);
   const [groupForm, setGroupForm] = useState(emptyGroupForm);
   const [savingGroup, setSavingGroup] = useState(false);
@@ -405,6 +425,9 @@ export default function Home() {
     if (query) {
       list = list.filter((f) => f.name.toLowerCase().includes(query));
     }
+    if (thisWeekOnly) {
+      list = list.filter((f) => daysUntilNextBirthday(f.birthday) <= 7);
+    }
     const sorted = [...list];
     if (sortMode === "name") {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -424,28 +447,12 @@ export default function Home() {
       sorted.sort((a, b) => daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday));
     }
     return sorted;
-  }, [friends, activeGroup, searchQuery, sortMode]);
+  }, [friends, activeGroup, searchQuery, sortMode, thisWeekOnly]);
 
   const birthdaysThisWeek = useMemo(
     () => friends.filter((f) => daysUntilNextBirthday(f.birthday) <= 7).length,
     [friends]
   );
-
-  // Friends whose upcoming birthday falls within 6 days of another friend's —
-  // considered across the whole list, not just the currently filtered view.
-  const clusteredFriendIds = useMemo(() => {
-    const withDays = friends.map((f) => ({ id: f.id, days: daysUntilNextBirthday(f.birthday) }));
-    const clustered = new Set();
-    for (let i = 0; i < withDays.length; i++) {
-      for (let j = i + 1; j < withDays.length; j++) {
-        if (Math.abs(withDays[i].days - withDays[j].days) <= 6) {
-          clustered.add(withDays[i].id);
-          clustered.add(withDays[j].id);
-        }
-      }
-    }
-    return clustered;
-  }, [friends]);
 
   function syncCalendarPartsFromBirthday(birthday) {
     if (birthday) {
@@ -935,6 +942,8 @@ export default function Home() {
           dark={dark}
           neutralPillClass={neutralPillClass}
           activePillClass={activePillClass}
+          thisWeekOnly={thisWeekOnly}
+          setThisWeekOnly={setThisWeekOnly}
         />
         <div className="mb-6 flex shrink-0 gap-2">
           <button
@@ -1687,14 +1696,6 @@ export default function Home() {
                         Reminded
                       </span>
                     )}
-                    {clusteredFriendIds.has(friend.id) && (
-                      <span
-                        title="Another friend's birthday falls within a week of this one"
-                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-                      >
-                        🎉 Same week
-                      </span>
-                    )}
                     {activeGroup === "all" && <GroupBadge group={group} isDark={dark} />}
                   </div>
                 </div>
@@ -1759,13 +1760,23 @@ export default function Home() {
           dark={dark}
           neutralPillClass={neutralPillClass}
           activePillClass={activePillClass}
+          thisWeekOnly={thisWeekOnly}
+          setThisWeekOnly={setThisWeekOnly}
         />
-        <button
-          onClick={() => setShowGroupPanel((v) => !v)}
-          className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
-        >
-          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            onClick={() => setShowGroupPanel((v) => !v)}
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            {showGroupPanel ? "Close groups" : "＋ Manage groups"}
+          </button>
+          <button
+            onClick={() => setShowSettingsPanel((v) => !v)}
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            {showSettingsPanel ? "Close settings" : "⚙ Settings"}
+          </button>
+        </div>
       </div>
 
       {/* Manage groups panel */}
