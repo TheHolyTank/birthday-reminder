@@ -853,7 +853,7 @@ export default function Home() {
   const dangerPillClass = "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
 
   return (
-    <main className="relative mx-auto max-w-3xl px-4 py-10 sm:py-16">
+    <main className="relative mx-auto max-w-4xl px-4 py-10 sm:py-16">
       <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-6 sm:top-6">
         <button
           onClick={handleLogout}
@@ -1557,36 +1557,65 @@ export default function Home() {
         </div>
       </form>
 
-      {/* Friends list */}
-      <section>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Upcoming birthdays</h2>
+      {/* Friends list + sidebar filters */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <aside className="space-y-4 lg:w-56 lg:shrink-0">
           {friends.length > 0 && (
-            <div className="flex flex-nowrap items-center gap-2">
-              <select
-                value={sortMode}
-                onChange={(e) => setSortMode(e.target.value)}
-                aria-label="Sort friends"
-                className={`${inputClass} w-auto shrink-0`}
-              >
-                <option value="birthday">Sort: Soonest birthday</option>
-                <option value="name">Sort: Name (A–Z)</option>
-                <option value="group">Sort: Group</option>
-                <option value="recent">Sort: Recently added</option>
-              </select>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name"
-                aria-label="Search friends by name"
-                className={`${inputClass} min-w-0 max-w-[12rem]`}
-              />
-            </div>
+            <>
+              <div>
+                <label htmlFor="friend-search" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Search
+                </label>
+                <input
+                  id="friend-search"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name"
+                  className={`${inputClass} w-full`}
+                />
+              </div>
+              <div>
+                <label htmlFor="friend-sort" className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  Sort by
+                </label>
+                <select
+                  id="friend-sort"
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value)}
+                  className={`${inputClass} w-full`}
+                >
+                  <option value="birthday">Soonest birthday</option>
+                  <option value="name">Name (A–Z)</option>
+                  <option value="group">Group</option>
+                  <option value="recent">Recently added</option>
+                </select>
+              </div>
+            </>
           )}
-        </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">Group</p>
+            <GroupFilterPills
+              groups={groups}
+              activeGroup={activeGroup}
+              setActiveGroup={setActiveGroup}
+              dark={dark}
+              neutralPillClass={neutralPillClass}
+              activePillClass={activePillClass}
+            />
+          </div>
+          <button
+            onClick={() => setShowGroupPanel((v) => !v)}
+            className="w-full rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          >
+            {showGroupPanel ? "Close groups" : "＋ Manage groups"}
+          </button>
+        </aside>
 
-        {loading && <p className="text-neutral-500 dark:text-neutral-400">Loading…</p>}
+        <section className="min-w-0 flex-1">
+          <h2 className="mb-4 font-display text-lg font-semibold">Upcoming birthdays</h2>
+
+          {loading && <p className="text-neutral-500 dark:text-neutral-400">Loading…</p>}
         {!loading && visibleFriends.length === 0 && (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-white/60 p-8 text-center text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400">
             {searchQuery.trim() ? (
@@ -1719,25 +1748,8 @@ export default function Home() {
               </li>
             );
           })}
-        </ul>
-      </section>
-
-      {/* Group filter bar (also shown near the top) */}
-      <div className="mt-10 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-        <GroupFilterPills
-          groups={groups}
-          activeGroup={activeGroup}
-          setActiveGroup={setActiveGroup}
-          dark={dark}
-          neutralPillClass={neutralPillClass}
-          activePillClass={activePillClass}
-        />
-        <button
-          onClick={() => setShowGroupPanel((v) => !v)}
-          className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
-        >
-          {showGroupPanel ? "Close groups" : "＋ Manage groups"}
-        </button>
+          </ul>
+        </section>
       </div>
 
       {/* Manage groups panel */}
