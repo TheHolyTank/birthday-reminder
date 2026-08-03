@@ -927,16 +927,14 @@ export default function Home() {
         </div>
       )}
 
-      {groups.length > 0 && (
-        <GroupFilterPills
-          groups={groups}
-          activeGroup={activeGroup}
-          setActiveGroup={setActiveGroup}
-          dark={dark}
-          neutralPillClass={neutralPillClass}
-          activePillClass={activePillClass}
-        />
-      )}
+      <GroupFilterPills
+        groups={groups}
+        activeGroup={activeGroup}
+        setActiveGroup={setActiveGroup}
+        dark={dark}
+        neutralPillClass={neutralPillClass}
+        activePillClass={activePillClass}
+      />
 
       {/* Account settings panel */}
       {showSettingsPanel && (
@@ -1724,48 +1722,19 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* Group filter bar */}
-      <div className="mb-6 mt-10 flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-        <button
-          onClick={() => setActiveGroup("all")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            activeGroup === "all" ? activePillClass : neutralPillClass
-          }`}
-        >
-          All
-        </button>
-        {groups.map((g) => {
-          const isActive = activeGroup === String(g.id);
-          const s = groupStyle(g.color, dark);
-          return (
-            <button
-              key={g.id}
-              onClick={() => setActiveGroup(String(g.id))}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                isActive ? "" : neutralPillClass
-              }`}
-              style={
-                isActive
-                  ? { backgroundColor: s.badge.backgroundColor, color: s.badge.color, boxShadow: `0 0 0 2px ${s.hex}` }
-                  : undefined
-              }
-            >
-              <GroupDot color={g.color} />
-              {g.name}
-            </button>
-          );
-        })}
-        <button
-          onClick={() => setActiveGroup("ungrouped")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            activeGroup === "ungrouped" ? activePillClass : neutralPillClass
-          }`}
-        >
-          Ungrouped
-        </button>
+      {/* Group filter bar (also shown near the top) */}
+      <div className="mt-10 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+        <GroupFilterPills
+          groups={groups}
+          activeGroup={activeGroup}
+          setActiveGroup={setActiveGroup}
+          dark={dark}
+          neutralPillClass={neutralPillClass}
+          activePillClass={activePillClass}
+        />
         <button
           onClick={() => setShowGroupPanel((v) => !v)}
-          className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
+          className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50 dark:bg-neutral-900 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:bg-indigo-500/10"
         >
           {showGroupPanel ? "Close groups" : "＋ Manage groups"}
         </button>
