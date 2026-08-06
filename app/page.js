@@ -185,8 +185,8 @@ function GroupFilterPills({
   dark,
   neutralPillClass,
   activePillClass,
-  thisWeekOnly,
-  setThisWeekOnly,
+  timeFilter,
+  setTimeFilter,
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -229,13 +229,22 @@ function GroupFilterPills({
       </button>
       <span className="mx-1 h-4 w-px bg-neutral-200 dark:bg-neutral-700" aria-hidden="true" />
       <button
-        onClick={() => setThisWeekOnly((v) => !v)}
-        aria-pressed={thisWeekOnly}
+        onClick={() => setTimeFilter((v) => (v === "week" ? null : "week"))}
+        aria-pressed={timeFilter === "week"}
         className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-          thisWeekOnly ? activePillClass : neutralPillClass
+          timeFilter === "week" ? activePillClass : neutralPillClass
         }`}
       >
         🎂 This week
+      </button>
+      <button
+        onClick={() => setTimeFilter((v) => (v === "month" ? null : "month"))}
+        aria-pressed={timeFilter === "month"}
+        className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+          timeFilter === "month" ? activePillClass : neutralPillClass
+        }`}
+      >
+        📅 This month
       </button>
     </div>
   );
@@ -289,7 +298,7 @@ export default function Home() {
   const [calendarYear, setCalendarYear] = useState("");
 
   const [activeGroup, setActiveGroup] = useState("all");
-  const [thisWeekOnly, setThisWeekOnly] = useState(false);
+  const [timeFilter, setTimeFilter] = useState(null); // null | "week" | "month"
   const [showGroupPanel, setShowGroupPanel] = useState(false);
   const [groupForm, setGroupForm] = useState(emptyGroupForm);
   const [savingGroup, setSavingGroup] = useState(false);
@@ -427,8 +436,10 @@ export default function Home() {
     if (query) {
       list = list.filter((f) => f.name.toLowerCase().includes(query));
     }
-    if (thisWeekOnly) {
+    if (timeFilter === "week") {
       list = list.filter((f) => daysUntilNextBirthday(f.birthday) <= 7);
+    } else if (timeFilter === "month") {
+      list = list.filter((f) => daysUntilNextBirthday(f.birthday) <= 30);
     }
     const sorted = [...list];
     if (sortMode === "name") {
@@ -449,7 +460,7 @@ export default function Home() {
       sorted.sort((a, b) => daysUntilNextBirthday(a.birthday) - daysUntilNextBirthday(b.birthday));
     }
     return sorted;
-  }, [friends, activeGroup, searchQuery, sortMode, thisWeekOnly]);
+  }, [friends, activeGroup, searchQuery, sortMode, timeFilter]);
 
   const birthdaysThisWeek = useMemo(
     () => friends.filter((f) => daysUntilNextBirthday(f.birthday) <= 7).length,
@@ -945,8 +956,8 @@ export default function Home() {
           dark={dark}
           neutralPillClass={neutralPillClass}
           activePillClass={activePillClass}
-          thisWeekOnly={thisWeekOnly}
-          setThisWeekOnly={setThisWeekOnly}
+          timeFilter={timeFilter}
+          setTimeFilter={setTimeFilter}
         />
         <div className="mb-6 flex shrink-0 gap-2">
           <button
@@ -1786,8 +1797,8 @@ export default function Home() {
           dark={dark}
           neutralPillClass={neutralPillClass}
           activePillClass={activePillClass}
-          thisWeekOnly={thisWeekOnly}
-          setThisWeekOnly={setThisWeekOnly}
+          timeFilter={timeFilter}
+          setTimeFilter={setTimeFilter}
         />
         <div className="flex shrink-0 gap-2">
           <button
